@@ -1,0 +1,142 @@
+.commodity-management {
+    &-title {
+        height: 80px;
+        display: flex;
+        background: #fff;
+        margin: 20px;
+        // margin-bottom: 0;
+        padding: 0 24px;
+        align-items: center;
+        border-radius: 8px;
+    }
+    &-content {
+        margin: 20px;
+    }
+    .location {
+        justify-content: flex-end;
+    }
+    .ant-cascader {
+        width: 250px;
+    }
+    .select-btn {
+        cursor: pointer;
+    }
+    .title-input {
+        display: flex;
+        margin-left: 20px;
+    }
+    .ant-table-thead {
+        th {
+            background: #fff !important;
+            &::before {
+                display: none !important;
+            }
+            font-weight: 400 !important;
+            text-align: center;
+        }
+        th:nth-child(2) {
+            text-align: left;
+        }
+       
+       
+    }
+    .ant-table-empty {
+        border-radius: 8px;
+    }
+
+
+}
+.productInfo {
+    &-img {
+        width: 60px;
+        height: 60px;
+        float: left;
+        margin-right: 8px;
+        img {
+            width: 100%;
+            height: 100%;
+        }
+    }
+    &-id {
+        margin-top: 5px;
+        color: rgba(32,32,32,0.8);
+        font-size: 12px;
+    }
+}
+
+.ant-cascader-menu {
+    min-width: 200px !important;
+}
+.shop-management {
+    &-title {
+        height: 80px;
+        background: #fff;
+        margin: 20px;
+        padding: 20px 24px;
+        border-radius: 8px;
+        font-size: 14px;
+        color: #333333;
+    }
+    .item-img {
+        float: left;
+        width: 40px;
+        height: 40px;
+        border-radius: 4px;
+        background: #000;
+        margin-right: 10px;
+        
+    }
+    .item-sum {
+        font-weight: 500;
+        color: #333333;
+        font-size: 14px;
+        span {
+            font-size: 16px;
+        }
+    }
+    .suppliers-title {
+        display: flex;
+        justify-content: space-between;
+        height: 60px;
+        align-items: center;
+        margin: 0 20px;
+        // padding: 15px 20px;
+        background: #fff;
+        // input {
+        //     height: 20px;
+        // }
+    }
+    .suppliers-input {
+        display: flex;
+        width: 500px;
+    }
+    .suppliers-btn {
+        cursor: pointer;
+        margin-top: 5px;
+        font-size: 16px;
+        &:hover {
+            color: #1890FF;
+        }
+    }
+    &-table {
+        margin: 0 20px;
+        .ant-table-thead {
+            th {
+                border: none;
+                font-weight: 400;
+                color: #202020;
+                &::before {
+                    display: none;
+                }
+            }
+        }
+    }
+    &-content{
+        background: #fff;
+        margin: 20px;
+        border-radius: 8px;
+    }
+    
+}
+
+

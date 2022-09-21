@@ -1,0 +1,17 @@
+.search-input {
+    display: flex;
+    width: 290px;
+    margin-left: 20px;
+
+    .input-search-icon {
+        width: 40px;
+        height: 32px;
+        background-color: #1785ff;
+        text-align: center;
+        line-height: 32px;
+        color: #fff;
+        border-radius: 2px;
+        margin-left: -1px;
+        cursor: pointer;
+    }
+}
