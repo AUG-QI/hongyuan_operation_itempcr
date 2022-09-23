@@ -14,15 +14,12 @@ export interface LoginByPasswordProps {
 /** 登陆成功 */
 const LoginByPassword: FC<LoginByPasswordProps> = (props) => {
     const { onLoginSuccessed } = props;
-
-    const handleLogin = async(values: PassWordLoginParams) => {
+    const handleLogin = async (values: PassWordLoginParams) => {
         const res = await passwordlogin(values);
+        if (res !== 'success') {
+            return message.info('账号或密码错误');
+        }
         onLoginSuccessed(res);
-            // .then((res) => {
-            //     debugger;
-            //     onLoginSuccessed(res);
-            // })
-            // .catch((err) => message.error(err.message));
     };
 
     return (
@@ -30,7 +27,7 @@ const LoginByPassword: FC<LoginByPasswordProps> = (props) => {
             autoComplete="off"
             initialValues={{ remember: true }}
             onFinish={handleLogin}
-            className='login-form'
+            className="login-form"
         >
             <Form.Item
                 label=""
@@ -45,11 +42,19 @@ const LoginByPassword: FC<LoginByPasswordProps> = (props) => {
                 name="password"
                 rules={[{ required: true, message: '请输入密码' }]}
             >
-                <Input.Password placeholder="请输入密码" visibilityToggle={false}/>
+                <Input.Password
+                    placeholder="请输入密码"
+                    visibilityToggle={false}
+                />
             </Form.Item>
 
             <Form.Item>
-                <Button block type="primary" htmlType="submit" className='login-submit'>
+                <Button
+                    block
+                    type="primary"
+                    htmlType="submit"
+                    className="login-submit"
+                >
                     登录
                 </Button>
             </Form.Item>

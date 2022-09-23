@@ -333,15 +333,24 @@ class InventorySynchronous extends React.Component<{}, IState> {
     saveSte = async () => {
         // 1.检查基础库存同步
         const { basicStockPreWarning, basicStockRestore, selectData } = this.state;
-        const data = {
-            storeId: 'BIYAO',
-            appName: 'aiyong',
-            stockageWarnValueDTOList: [],
-        };
-        const resStockageWarn = await stockageWarnValueUpdate(data);
-        console.log(resStockageWarn, '??????');
-       const res = await updateStockWarningInfo({ prewarningValue: basicStockPreWarning, restoreValue: basicStockRestore });
-       // 特殊类目保存
+        const data = [];
+        selectData.forEach(item => {
+            data.push({
+                id: item.id,
+                prewarningValue: item.inputValue.alertValue,
+                restoreValue: item.inputValue.upValue,
+            });
+        });
+        const basicStock = [{
+            id: 0,
+            prewarningValue: basicStockPreWarning,
+            restoreValue: basicStockRestore,
+        }, ...data];
+        console.log(basicStock, '????basicStock????');
+        
+        const res = await updateStockWarningInfo(basicStock);
+    
+        // 特殊类目保存
         sessionStorage.removeItem(`targetKeys`);
         this.setState({ checkSpecialStockDialogVisible: false, selectData: [], checkedKeys: [],  alertValue: '', upValue: '' });
      }

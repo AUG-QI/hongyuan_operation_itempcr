@@ -201,7 +201,7 @@ export const getCategoryOptions = () => {
  */
 export const getBasicStockValue = () => {
     return new Promise((resolve, reject) => {
-        axios.post('/itemManage/getStockWarningInfo', null)
+        axios.post('/itemManage/getStockWarningInfo', { cid: 0 })
             .then((response) => {
                 console.log(response, '????respons库存同步e');
                 resolve({
@@ -258,13 +258,13 @@ export const deleteRelation = (params) => {
  * 储存特殊类目的值
  */
 export const stockageWarnValueUpdate = (params) => {
-    return new Promise((resolve, reject) => {
-        axios.post('/item/stockageWarnValueUpdate', params, { baseURL: 'http://192.168.1.65:8080' })
-            .then((response) => {
-                console.log(response, '????respons库存同步e');
-            })
-            .catch((error) => {
-                reject(error);
-            });
-    });
+    // return new Promise((resolve, reject) => {
+    //     axios.post('/item/stockageWarnValueUpdate', params, { baseURL: 'http://192.168.1.65:8080' })
+    //         .then((response) => {
+    //             console.log(response, '????respons库存同步e');
+    //         })
+    //         .catch((error) => {
+    //             reject(error);
+    //         });
+    // });
 };

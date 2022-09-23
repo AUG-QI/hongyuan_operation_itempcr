@@ -13,14 +13,16 @@ export interface PassWordLoginParams {
  * @returns 
  */
 export const passwordlogin = (params: PassWordLoginParams) => {
-    return axios.post('/user/login', {
-        account: params.username,
-        password: params.password,
-    }, { withCredentials: false })
-        .then((response) => {
-            console.log(response);
-        })
-        .catch((error) => {
-            console.log(error, '???error');
-        });
+    return new Promise((resolve, reject) => {
+        axios.post('/user/login', {
+            account: params.username,
+            password: params.password,
+        }, { withCredentials: false })
+            .then((response) => {
+                resolve(response);
+            })
+            .catch((error) => {
+                resolve(error);
+            });
+    });
 };
