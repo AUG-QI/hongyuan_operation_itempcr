@@ -19,6 +19,8 @@ interface IState {
     searchData: SearchData;
     /** 总数 */
     total: number;
+    /** 类目信息 */
+    categoryInfo: string;
 }
 
 /** 类目选择项 */
@@ -29,6 +31,7 @@ interface categoryoptions {
     categoryName?: string;
     /** 子集 */
     children?: categoryoptions[];
+
 }
 
 /** 搜索内容 */
@@ -62,6 +65,7 @@ class CommodityManagement extends React.Component<IProps, IState>  {
                 pageNo: 1,
                 pageSize: 20,
             },
+            categoryInfo: '',
         };
     }
     componentDidMount (): void {
@@ -76,9 +80,12 @@ class CommodityManagement extends React.Component<IProps, IState>  {
         // 获取类目数据
         const categoryoptions: any = await getCategoryOptions();
         // 设置默认数据 - 第一条数据
-        const firstData: string[] = [];
-        const category = this.getFirstCategoryData(categoryoptions, firstData);
-        this.setState({ categoryoptions, searchData: { ...searchData, category } }, () => {
+        let firstData = {
+            data: [],
+            name: [],
+        };
+        firstData = this.getFirstCategoryData(categoryoptions, firstData);
+        this.setState({ categoryoptions, searchData: { ...searchData, category: firstData.data, categoryInfo: firstData.name } }, () => {
             this.handleSearch();
         });
     }
@@ -89,31 +96,43 @@ class CommodityManagement extends React.Component<IProps, IState>  {
      * @param arr
      * @returns
      */
-    getFirstCategoryData = (categoryoptions: any, arr: string[]): string[] => {
+    getFirstCategoryData = (categoryoptions: any, firstData): string[] => {
         if (!categoryoptions.length) {
             return [];
         }
         categoryoptions?.forEach((item: any, index: number) => {
             if (index === 0) {
-                arr.push(item.categoryId);
+                firstData.data.push(item.categoryId);
+                firstData.name.push(item.categoryName);
                 if (item?.children) {
-                    this.getFirstCategoryData(item.children, arr);
+                    this.getFirstCategoryData(item.children, firstData);
                 }
             }
         });
-        return arr;
+        return firstData;
     }
 
     /**
      * 处理类目改变
      * @param val
      */
-    handleCategoryChange = (val: string[]) => {
+    handleCategoryChange = (val: string[], data: any) => {
+        const categoryInfo = this.getCategoryInfo(data);
         const { searchData } = this.state;
         searchData.category = val;
-        this.setState({ searchData }, () => {
+        this.setState({ searchData, categoryInfo }, () => {
             this.handleSearch();
         });
+    }
+
+    /**
+     * 获取类目中文名称
+     */
+    getCategoryInfo = (data) => {
+        const arr = data.map((item) => {
+            return item.categoryName;
+        });
+        return arr.join('/');
     }
 
     /**
@@ -171,7 +190,21 @@ class CommodityManagement extends React.Component<IProps, IState>  {
      */
     handleSearch = async () => {
         const { searchData } = this.state;
-        const { list, total } = await reqSearchCommodity(searchData);
+        const reqData = {
+            thirdCategoryId: searchData.category[searchData.category.length - 1] || 0,
+            pageNo: searchData.pageNo,
+            pageSize: searchData.pageSize,
+        };
+        if (searchData.spuId) {
+            reqData.spuId = searchData.spuId;
+        }
+        if (searchData.productName) {
+            reqData.productName = searchData.productName;
+        }
+        if (searchData.distributionState[0] !== 'all') {
+            reqData.distributionState = searchData.distributionState;
+        }
+        const { list, total } = await reqSearchCommodity(reqData);
         // 整理成能传入tablelist的文件 itemTableList
         const itemTableList = this.handleItemTableList(list);
         this.setState({ itemTableList, total });
@@ -183,13 +216,16 @@ class CommodityManagement extends React.Component<IProps, IState>  {
      */
     handleItemTableList = (data: any) => {
         let tableData = [];
+        const { categoryInfo } = this.state;
         tableData = data.map(item => {
             return {
                 name: item.productName,
-                url: item.portalSquareImgUrl,
+                // 因为会有null 要处理成暂无图片
+                url: item.portalSquareImgUrl || '',
                 key: item.spuId,
                 category: item.salePoint,
                 liangdao: '',
+                leimu: categoryInfo,
             };
         });
         return tableData;

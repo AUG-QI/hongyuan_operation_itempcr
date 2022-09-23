@@ -7,7 +7,8 @@ import HomePage from './pages/homePage';
 import { getUserData } from './services/UserService';
 import './App.css';
 
-function App() {
+/** 入口页面 */
+function App () {
     useEffect(() => {
         if (location.href.includes('/login')) {
             location.hash = '/login';
@@ -18,7 +19,6 @@ function App() {
 
     return (
         <Layout className="layout">
-            
             <HashRouter>
                 <Routes>
                     <Route path='/' element={<Navigate to='/commodityManagement'/>}/>

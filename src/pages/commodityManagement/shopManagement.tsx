@@ -4,9 +4,9 @@ import React from 'react';
 import { useParams } from 'react-router';
 import FooterPage from '../../components/footerPage';
 import SearchInput from '../../components/searchInput';
-import SelectPlatform from '../../components/selectPlatform';
+import SelectPlatform, { PLATFORM_IMG } from '../../components/selectPlatform';
 import { isEmpty, transformationObject, UrlData } from '../../services/utils';
-import { reqSearchCommodity, reqSearchDistributorList } from './api';
+import { deleteRelation, reqSearchCommodity, reqSearchDistributorList } from './api';
 import { ItemsTableList } from './commodityContent';
 
 /** 分销商表格头部 */
@@ -37,6 +37,13 @@ const DISTRIBUTORS_HEAD_TITLE = [
         ),
     },
 ];
+
+const PLATFORM_MAP = {
+    dy: 'doudian',
+    ks: 'youzan',
+    xhs: 'hong',
+};
+
 const rollback = () => {
     window.history.back(-1);
 };
@@ -68,13 +75,18 @@ interface SearchInfo {
 /** 标题内容 */
 interface TitleData {
     /** 商品图片url */
-    itemImgUrl: string;
+    itemImgUrl?: string;
     /** 商品标题 */
-    itemTitle: string;
+    itemTitle?: string;
     /** 铺货数量 */
     distributionNum?: number;
 }
 
+interface DeleteList {
+    shop_id: number;
+    num_iid: number;
+    origin_num_iid: number;
+}
 interface IState {
     /** 是否全选 */
     isAllValue: boolean;
@@ -88,6 +100,8 @@ interface IState {
     itemTableList: ItemsTableList[];
     /** 标题数据 */
     titleData: TitleData;
+    /** 删除列表 */
+    deleteList: DeleteList[];
 }
 
 /** 分销商列表页面 */
@@ -115,6 +129,7 @@ class ShopManagement extends React.Component<IProps, IState> {
                 pageNo: 1,
                 pageSize: 20,
             },
+            deleteList: [],
         };
     }
     async componentDidMount () {
@@ -125,16 +140,16 @@ class ShopManagement extends React.Component<IProps, IState> {
         }
         // 获取商品的具体数据
         const itemList = await reqSearchCommodity({ spuId: urlData.id });
-        const itemData: TitleData = itemList[0];
+        const itemData = itemList.list[0] || {};
         const titleData = {
-            itemImgUrl: itemData.productName,
-            itemTitle: itemData.portalSquareImgUrl,
+            itemImgUrl: itemData.portalSquareImgUrl || '',
+            itemTitle: itemData.productName || '',
         };
         const { secarchInfo } = this.state;
         secarchInfo.originNumId = urlData.id;
-        const { items = [], total_amount = 0 } = reqSearchDistributorList(secarchInfo);
-        titleData.distributionNum = total_amount;
-        this.setState({ titleData, secarchInfo, itemTableList: items });
+        this.setState({ titleData, secarchInfo }, () => {
+            this.hadleAllSearch(secarchInfo);
+        });
     }
     /**
      * 获取table表头
@@ -144,18 +159,25 @@ class ShopManagement extends React.Component<IProps, IState> {
             {
                 title: '平台名称',
                 dataIndex: 'name',
+                render: (_, record) => (
+                    <Space size="middle">
+                        <div className='name-icon'>
+                            <img src={record.url} alt="" />
+                        </div>
+                    </Space>
+                ),
             },
             {
                 title: '分销商ID',
-                dataIndex: 'age',
+                dataIndex: 'user_id',
             },
             {
                 title: '分销商名称',
-                dataIndex: 'address',
+                dataIndex: 'user_name',
             },
             {
                 title: '店名',
-                dataIndex: 'address',
+                dataIndex: 'shop_name',
             },
             {
                 title: '操作',
@@ -171,37 +193,47 @@ class ShopManagement extends React.Component<IProps, IState> {
     /**
      * 下架商品
      */
-    shelvesSuppliers = (record) => {
-        console.log(record, '????record');
+    shelvesSuppliers = async ({ shop_id, num_iid, origin_num_iid }) => {
+        const data = {
+            shop_id,
+            num_iid,
+            origin_num_iid,
+        };
+        const res = await deleteRelation(data);
+        console.log(res);
+        
         
     }
-    // componentDidMount (): void {
-    //     // const { id } = useParams();
-    //     // console.log(useParams());
-    //     const location = useLocation();
-    //     console.log(location, '????');
-        
-        
-        
-    // }
-    changeTableSelectedState = () => {
-        console.log('changeTableSelectedState');
+    /**
+     * 改变表格状态
+     * @param val 
+     * @param item 
+     */
+    changeTableSelectedState = (val, list) => {
+        const { rowSelection, itemTableList } = this.state;
+        rowSelection.selectedRowKeys = val;
+        const deleteList: DeleteList[] = list.map(item => {
+            return {
+                shop_id: item.shop_id,
+                num_iid: item.num_iid,
+                origin_num_iid: item.origin_num_iid,
+            };
+        });
+        const isAllValue = val.length === itemTableList.length;
+        this.setState({ isAllValue, deleteList, rowSelection });
     };
     /**
      * 全选
      * @return
      */
     handelSelectAll = (val: boolean) => {
-        // const { itemTableList } = this.props;
         const { rowSelection, itemTableList } = this.state;
         if (!val) {
             rowSelection.selectedRowKeys = [];
         } else {
-            rowSelection.selectedRowKeys = itemTableList.map(
-                (item) => item.key
-            );
+            rowSelection.selectedRowKeys = itemTableList.map((item) => item.origin_num_iid);
         }
-        this.setState({ isAllValue: val });
+        this.setState({ isAllValue: val, rowSelection });
     };
 
     /**
@@ -222,7 +254,13 @@ class ShopManagement extends React.Component<IProps, IState> {
      * @param val 
      */
     handelOperationBtn = (val: string) => {
-
+        if (val === 'takenDown') {
+            // 拿到值
+            const { deleteList } = this.state;
+            deleteList.forEach(async (item) => {
+               const res = await deleteRelation(item);
+            })
+        }
     };
     /**
      * 处理搜索栏数据
@@ -250,24 +288,26 @@ class ShopManagement extends React.Component<IProps, IState> {
     /**
      * 处理搜索
      */
-    hadleAllSearch = async() => {
-        const { secarchInfo } = this.state;
-        const res = await reqSearchDistributorList(secarchInfo);
-        console.log(res, 'res');
-        
+    hadleAllSearch = async () => {
+        const { secarchInfo, titleData } = this.state;
+        const { items = [], total_amount = 0 } = await reqSearchDistributorList(secarchInfo);
+        const itemTableList = items.map(item => {
+            const platform = PLATFORM_MAP[item.shop_type];
+            return item.url = PLATFORM_IMG[platform];
+        });
+        titleData.distributionNum = total_amount;
+        this.setState({ itemTableList: items });
     }
-    render(): React.ReactNode {
-        const { itemData } = this.props;
-        const { rowSelection, isAllValue, storesItemNum, itemTableList } = this.state;
+    render (): React.ReactNode {
+        const { rowSelection, isAllValue, storesItemNum, itemTableList, titleData } = this.state;
         return (
             <div className="shop-management">
                 <div className="shop-management-title commodity-location">
                     <div className="item-img">
-                        {/* <img src={itemData.img} alt="" /> */}
+                        <img src={titleData.itemImgUrl} alt="" onError={(e) => {e.target.onerror = null; e.target.src="https://q.aiyongtech.com/biyao/imgs/error_img.jpeg"}} />
                     </div>
-                    {/* <div className='item-title'>{itemData.title}</div> */}
-                    <div className='item-title'>234234234234</div>
-                    <div className="item-sum">该商品已铺货店铺数：<span>{storesItemNum}</span></div>
+                    <div className='item-title'>{titleData.itemTitle}</div>
+                    <div className="item-sum">该商品已铺货店铺数：<span>{titleData.distributionNum}</span></div>
                 </div>
                 <div>
                     <div className="shop-management-content">
@@ -292,6 +332,11 @@ class ShopManagement extends React.Component<IProps, IState> {
                                 dataSource={itemTableList}
                                 rowSelection={rowSelection}
                                 pagination={false}
+                                scroll={{
+                                    y: 500,
+                                }}
+                                ellipsis = {true}
+                                rowKey='origin_num_iid'
                             />
                         </div>
                     </div>
@@ -301,6 +346,7 @@ class ShopManagement extends React.Component<IProps, IState> {
                         changePageSize={this.changePageSize}
                         handelOperationBtn={this.handelOperationBtn}
                         from="distributors"
+                        total={titleData.distributionNum}
                     ></FooterPage>
                 </div>
             </div>

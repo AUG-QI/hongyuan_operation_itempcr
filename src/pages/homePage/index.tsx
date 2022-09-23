@@ -6,7 +6,7 @@ import HomePageContent from './homePageContent';
 
 const HomePage = () => {
     useEffect(() => {
-        console.log('动了');
+        console.log('路由动了');
         
     }, []);
 
@@ -17,7 +17,6 @@ const HomePage = () => {
                 <HomePageSider></HomePageSider>
                 <HomePageContent></HomePageContent>
             </Layout>
-            {/* <Footer>Footer</Footer> */}
         </Layout>
     );
 }

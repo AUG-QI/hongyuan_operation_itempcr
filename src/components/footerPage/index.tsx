@@ -151,11 +151,17 @@ class FooterPage extends React.Component<IProps, IState>  {
                 buyerNicks: userArr,
                 reason: '批量上传',
             };
-            console.log(addData, '????');
             // 添加黑名单
             // self.props.actions.batchImportBlackList(addData, blType);
             // self.batchImportDialogHide();
         };
+    }
+    /**
+     * 处理批量下架
+     */
+    handelTakenDownBtn = () => {
+        const { handelOperationBtn } = this.props;
+        handelOperationBtn('takenDown');
     }
     render () {
         const { from, isAllValue, handelOperationBtn, total } = this.props;

@@ -11,6 +11,7 @@
     }
     &-content {
         margin: 20px;
+        border-radius: 20px;
     }
     .location {
         justify-content: flex-end;
@@ -31,11 +32,11 @@
             &::before {
                 display: none !important;
             }
-            font-weight: 400 !important;
-            text-align: center;
+            // font-weight: 400 !important;
+            // text-align: center !important;
         }
         th:nth-child(2) {
-            text-align: left;
+            // text-align: left;
         }
        
        
@@ -47,10 +48,10 @@
 
 }
 .productInfo {
+    display: flex;
     &-img {
         width: 60px;
         height: 60px;
-        float: left;
         margin-right: 8px;
         img {
             width: 100%;
@@ -68,6 +69,10 @@
     min-width: 200px !important;
 }
 .shop-management {
+    // margin: ;
+    .ant-table-wrapper {
+        margin-bottom: 100px;
+    }
     &-title {
         height: 80px;
         background: #fff;
@@ -82,8 +87,12 @@
         width: 40px;
         height: 40px;
         border-radius: 4px;
-        background: #000;
         margin-right: 10px;
+        overflow: hidden;
+        img {
+            width: 100%;
+            height: 100%;
+        }
         
     }
     .item-sum {
@@ -135,8 +144,24 @@
         background: #fff;
         margin: 20px;
         border-radius: 8px;
+        // height: calc(100vh - 384px);
+        .ant-table-body {
+            height: calc(100vh - 365px) !important;  
+        }
     }
     
+    .shop-management-table {
+        .name-icon {
+            width: 30px;
+            height: 30px;
+            margin-left: 10px;
+            img {
+                width: 100%;
+                height: 100%;
+            }
+        }
+    }
+    .ant-table-body {
+        height: calc(100vh - 306px );
+    }
 }
-
-

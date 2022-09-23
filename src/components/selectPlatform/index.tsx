@@ -7,12 +7,17 @@ const { Option } = Select;
 /** 平台图片 */
 export const PLATFORM_IMG: any = {
     all: 'https://qniyong.oss-cn-hangzhou.aliyuncs.com/biyao/imgs/all_platform_icon.png',
-    douying: 'https://qniyong.oss-cn-hangzhou.aliyuncs.com/biyao/imgs/douyin_logo.png',
-    douyinGray: '',
-    kuaishou: 'https://qniyong.oss-cn-hangzhou.aliyuncs.com/biyao/imgs/kuaishou_logo.png',
-    kuaishouGray: '',
-    xiaohongshu: 'https://qniyong.oss-cn-hangzhou.aliyuncs.com/biyao/imgs/xiaohongshu_logo.png',
-    xiaohongshuGray: '',
+    doudian: 'https://qniyong.oss-cn-hangzhou.aliyuncs.com/biyao/imgs/douyin_logo.png',
+    doudianGray: 'https://q.aiyongtech.com/biyao/imgs/douyin_logo_%20grey.png',
+    kuai: 'https://qniyong.oss-cn-hangzhou.aliyuncs.com/biyao/imgs/kuaishou_logo.png',
+    kuaiGray: 'https://q.aiyongtech.com/biyao/imgs/kuaishou_logo_%20grey.png',
+    hong: 'https://qniyong.oss-cn-hangzhou.aliyuncs.com/biyao/imgs/xiaohongshu_logo.png',
+    hongGray: 'https://q.aiyongtech.com/biyao/imgs/xiaohongshu_logo_%20grey.png',
+    youzan: 'https://q.aiyongtech.com/biyao/imgs/youzan_logo.png',
+    youzanGray: 'https://q.aiyongtech.com/biyao/imgs/youzan_logo_%20grey.png',
+    shipinhao: '',
+    shipinhaoGray: '',
+
 };
 
 /**
@@ -24,16 +29,24 @@ export const PLATFORM_OPTIONS = [
         label: '所有平台',
     },
     {
-        value: 'douying',
+        value: 'doudian',
         label: '抖音',
     },
     {
-        value: 'kuaishou',
+        value: 'kuai',
         label: '快手',
     },
     {
-        value: 'xiaohongshu',
+        value: 'hong',
         label: '小红书',
+    },
+    {
+        value: 'youzan',
+        label: '有赞',
+    },
+    {
+        value: 'shipinhao',
+        label: '视频号',
     },
 ];
 
@@ -72,7 +85,7 @@ class SelectPlatform extends React.Component<IProps, IState> {
     onChange = (val: string[]) => {
         const { handleSelectChange, from } = this.props;
         const { selectValues } = this.state;
-        if (from === 'productList') {
+        if (from === 'distributors') {
             this.setState({ selectValues: val });
             handleSelectChange(val);
             return;
@@ -90,6 +103,7 @@ class SelectPlatform extends React.Component<IProps, IState> {
     }
 
     render () {
+        const { from } = this.props;
         const { selectValues, selectMode } = this.state;
         return (
             <Select
@@ -114,7 +128,7 @@ class SelectPlatform extends React.Component<IProps, IState> {
                                 <span role='img' aria-label="China" className='option-items-img'>
                                     <img src={PLATFORM_IMG[item.value]} alt='' />
                                 </span>
-                                {item.label}{item.value === 'all' ? '' : '-不亮灯'}
+                                {item.label}{(item.value === 'all' || from === 'distributors')  ? '' : '-不亮灯'}
                             </div>
                         </Option>
                     );

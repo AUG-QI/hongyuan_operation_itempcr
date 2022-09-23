@@ -36,8 +36,6 @@ interface TitleType {
     address: string;
 }
 
-
-
 /** 商品列表内容页面 */
 class CommodityContent extends React.Component<IProps, IState> {
     constructor (props: IProps) {
@@ -52,8 +50,7 @@ class CommodityContent extends React.Component<IProps, IState> {
         };
     }
     componentDidMount (): void {
-        console.log(this.props.itemTableList, '?????props');
-        
+        // console.log(this.props.itemTableList, '?????props');
     }
 
     /**
@@ -131,15 +128,15 @@ class CommodityContent extends React.Component<IProps, IState> {
                 render: (_, record) => (
                     <Space
                         size="middle"
-                        className='productInfo'
                     >
-                        <div>
+                        <div className='productInfo'>
                             <div className='productInfo-img'>
-                                <img src={record.url} alt="" />
+                                <img src={record.url} alt="" onError={(e) => {e.target.onerror = null; e.target.src="https://q.aiyongtech.com/biyao/imgs/error_img.jpeg"}}  />
                             </div>
-                            <div className='productInfo-name'>{record.name}</div>
-                            <div className='productInfo-id'>ID:{record.key}</div>
-                            {/* <div>uweiruw</div> */}
+                            <div>
+                                <div className='productInfo-name'>{record.name}</div>
+                                <div className='productInfo-id'>ID:{record.key}</div>
+                            </div>
                         </div>
                     </Space>
                 ),
@@ -187,7 +184,7 @@ class CommodityContent extends React.Component<IProps, IState> {
         const { itemTableList, total } = this.props;
         const { rowSelection, isAllValue } = this.state;
         return (
-            <div>
+            <div className='shop-management'>
                 <Table
                     columns={this.getColumns()}
                     dataSource={itemTableList}
