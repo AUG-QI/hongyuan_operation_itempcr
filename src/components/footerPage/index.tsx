@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { ChangeEvent } from 'react';
 import { Button, Checkbox, message, Modal, Pagination } from 'antd';
 import { ContainerOutlined } from '@ant-design/icons';
 import './index.scss';
@@ -16,9 +16,9 @@ interface IProps {
     /** 来自 */
     from: string;
     /** 总数 */
-    total: number;
+    total: number | any;
     /** 选中数量 */
-    selectNum: number;
+    selectNum: number | any;
 }
 interface IState {
     /** 每页条数 */
@@ -49,9 +49,9 @@ class FooterPage extends React.Component<IProps, IState>  {
      * 点击全选
      * @returns
      */
-    handelSelectAll = (e) => {
+    handelSelectAll = (event: ChangeEvent<any>) => {
         const { handelSelectAll } = this.props;
-        const isAllValue = e.target.checked;
+        const isAllValue = event.target.checked;
         handelSelectAll(isAllValue);
     }
 
@@ -104,10 +104,10 @@ class FooterPage extends React.Component<IProps, IState>  {
 
     /**
      * 处理导出
-     * @param e 
+     * @param e
      */
-    onchange = (e) => {
-        const files = e.target.files;
+    onchange = (event: ChangeEvent<any>) => {
+        const files = event.target.files;
         const formData = new FormData();
         formData.append('file', files[0]);
         axios.post(`${config.BASE_URL}itemManage/importModifedFile`, formData, {
@@ -135,7 +135,7 @@ class FooterPage extends React.Component<IProps, IState>  {
                     <Checkbox
                         className="export-checkbox"
                         checked={isAllValue === true}
-                        onChange={this.handelSelectAll}
+                        onChange={() => this.handelSelectAll}
                     >
                         全选本页 {selectNum > 0 && <span>（已选{selectNum}）</span>}
                     </Checkbox>

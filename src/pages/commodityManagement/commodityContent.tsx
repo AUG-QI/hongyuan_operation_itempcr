@@ -1,7 +1,6 @@
 import { message, Space, Table } from 'antd';
-import React from 'react';
+import React, { ChangeEvent } from 'react';
 import { NavLink } from 'react-router-dom';
-import type { TableRowSelection } from 'antd/es/table/interface';
 import FooterPage from '../../components/footerPage';
 import { exportItemData } from './api';
 import { PLATFORM_IMG } from '../../components/selectPlatform';
@@ -31,7 +30,7 @@ interface IState {
     /** 是否全选 */
     isAllValue: boolean;
     /** rowSelection */
-    rowSelection: TableRowSelection<ItemsTableList>;
+    rowSelection: any;
 }
 
 /** 商品列表内容页面 */
@@ -47,14 +46,16 @@ class CommodityContent extends React.Component<IProps, IState> {
             isAllValue: false,
         };
     }
-    componentDidUpdate(prevProps: Readonly<IProps>, prevState: Readonly<IState>, snapshot?: any): void {
+
+    /** 组建更新 */
+    componentDidUpdate (prevProps: Readonly<IProps>): void {
         if (this.props.total !== prevProps.total) {
             const { rowSelection } = this.state;
             const initRowSelection = {
                 ...rowSelection,
                 selectedRowKeys: [],
             }
-            this.setState({ isAllValue: false, rowSelection: initRowSelection });
+            this.setState({ isAllValue: false, rowSelection: initRowSelection});
         }
     }
     /**
@@ -82,7 +83,7 @@ class CommodityContent extends React.Component<IProps, IState> {
         if (!val) {
             rowSelection.selectedRowKeys = [];
         } else {
-            rowSelection.selectedRowKeys = itemTableList.map((item) => item.spuId);
+            rowSelection.selectedRowKeys = itemTableList.map((item: any) => item.spuId);
         }
         this.setState({ isAllValue: val, rowSelection });
     };
@@ -126,7 +127,7 @@ class CommodityContent extends React.Component<IProps, IState> {
             await exportItemData({ spuIds, thirdCategoryId });
         } else {
             const { searchData } = this.props;
-            const data = {};
+            const data: any = {};
             // 三级类目
             data.thirdCategoryId = thirdCategoryId;
             if (searchData.distributionState[0] !== 'all') {
@@ -149,16 +150,16 @@ class CommodityContent extends React.Component<IProps, IState> {
                 dataIndex: 'productName',
                 width: 400,
                 key: 'productName',
-                render: (_, record) => (
+                render: (name: any, record: any) => (
                     <Space size="middle">
                         <div className="productInfo">
                             <div className="productInfo-img">
                                 <img
                                     src={record.portalSquareImgUrl}
                                     alt=""
-                                    onError={(e) => {
-                                        e.target.onerror = null;
-                                        e.target.src =
+                                    onError={(event: ChangeEvent<any>) => {
+                                        event.target.onerror = null;
+                                        event.target.src =
                                             'https://q.aiyongtech.com/biyao/imgs/error_img.jpeg';
                                     }}
                                 />
@@ -184,7 +185,7 @@ class CommodityContent extends React.Component<IProps, IState> {
                 title: '渠道',
                 dataIndex: 'distributionState',
                 key: 'distributionState',
-                render: (_, record) => (
+                render: (name: any, record: any) => (
                     <Space size="middle">
                         <div className="distribution-state">
                             {record.doudianDistributionState === 1 ? (
@@ -204,7 +205,7 @@ class CommodityContent extends React.Component<IProps, IState> {
             {
                 title: '操作',
                 dataIndex: 'operation',
-                render: (_, record) => (
+                render: (name: any, record: any) => (
                     <Space size="middle">
                         <NavLink
                             to={{
@@ -231,7 +232,6 @@ class CommodityContent extends React.Component<IProps, IState> {
                     scroll={{
                         y: 500,
                     }}
-                    ellipsis={true}
                     rowKey="spuId"
                     loading={shopManagementLoading}
                 />

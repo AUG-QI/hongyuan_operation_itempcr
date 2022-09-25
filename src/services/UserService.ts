@@ -1,3 +1,4 @@
+
 import axios from '../services/axios';
 
 export interface UserInfo {
@@ -36,7 +37,7 @@ export const fetchUserInfo = (): Promise<Partial<UserInfo>> => {
  */
 export const getUserData = async () => {
     if (!window.userInfo?.nick) {
-        const userInfo = await fetchUserInfo();
+        const userInfo: any = await fetchUserInfo();
         if (!userInfo.nick) {
             location.hash = '/login';
         }

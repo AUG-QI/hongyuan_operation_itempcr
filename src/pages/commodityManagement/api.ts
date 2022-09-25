@@ -111,7 +111,7 @@ export const reqSearchDistributorList = (params: DistributorParams): Promise<any
 /**
  * 下架分销商商品
  */
-export const deleteRelation = (params) => {
+export const deleteRelation = (params: any) => {
     return new Promise((resolve, reject) => {
         axios.post('/Distributeitem/deleteRelation', params, {
             baseURL: config.BASE_1688_URL,

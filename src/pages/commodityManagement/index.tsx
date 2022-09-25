@@ -16,7 +16,7 @@ interface IState {
     /** 商品列表 */
     itemTableList: ItemsTableList[];
     /** 搜索数据 */
-    searchData: SearchData;
+    searchData: SearchData | any;
     /** 总数 */
     total: number;
     /** 类目信息 */
@@ -87,7 +87,7 @@ class CommodityManagement extends React.Component<IProps, IState>  {
             return;
         }
         // 设置默认数据 - 第一条数据
-        let firstData = {
+        let firstData: any = {
             data: [],
             name: [],
         };
@@ -103,7 +103,7 @@ class CommodityManagement extends React.Component<IProps, IState>  {
      * @param arr
      * @returns
      */
-    getFirstCategoryData = (categoryoptions: any, firstData): string[] => {
+    getFirstCategoryData = (categoryoptions: any, firstData: any): string[] => {
         if (!categoryoptions.length) {
             return [];
         }
@@ -135,8 +135,8 @@ class CommodityManagement extends React.Component<IProps, IState>  {
     /**
      * 获取类目中文名称
      */
-    getCategoryInfo = (data) => {
-        const arr = data.map((item) => {
+    getCategoryInfo = (data: any) => {
+        const arr = data.map((item: any) => {
             return item.categoryName;
         });
         return arr.join('/');
@@ -192,7 +192,7 @@ class CommodityManagement extends React.Component<IProps, IState>  {
      */
     handleSearch = async () => {
         const { searchData } = this.state;
-        const reqData = {
+        const reqData: any = {
             thirdCategoryId: searchData.category[searchData.category.length - 1] || 0,
             pageNo: searchData.pageNo,
             pageSize: searchData.pageSize,
@@ -219,7 +219,7 @@ class CommodityManagement extends React.Component<IProps, IState>  {
     handleItemTableList = (data: any) => {
         let tableData = [];
         const { categoryInfo } = this.state;
-        tableData = data.map(item => {
+        tableData = data.map((item: any) => {
             return {
                 ...item,
                 categoryInfo,
@@ -234,7 +234,7 @@ class CommodityManagement extends React.Component<IProps, IState>  {
                 <Cascader
                     value={searchData.category}
                     options={categoryoptions}
-                    onChange={this.handleCategoryChange}
+                    onChange={() => this.handleCategoryChange}
                     allowClear={false}
                     style={{ width: 324 }}
                     fieldNames={{ label: 'categoryName', value: 'categoryId' }}/>
