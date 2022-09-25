@@ -1,10 +1,24 @@
+import { message } from 'antd';
 import moment from '_moment@2.29.4@moment';
 import axios from '../../services/axios';
+import config from '../../config';
 
 interface CategoryData {
     categoryId?: number;
     categoryName?: string;
     children?: CategoryData[];
+}
+
+/** 更新库存预警值参数 */
+interface StockWarningInfo {
+    /** 类目名称 */
+    name: string;
+    /** 子类目id */
+    cid: number;
+    /** 预警值 */
+    prewarningValue: number;
+    /** 上升阔值 */
+    restoreValue: number;
 }
 /**
  * 请求获取商品列表
@@ -12,10 +26,14 @@ interface CategoryData {
 export const reqSearchCommodity = (params: any): Promise<any> => {
     return new Promise((resolve, reject) => {
         axios.post('/itemManage/getItemList', params)
-            .then((response) => {
-                resolve(response);
+            .then((response: any) => {
+                if (response.code !== 200) {
+                    message.info('请求商品列表发生错误');
+                    resolve([]);
+                }
+                resolve(response.data);
             })
-            .catch((error) => {
+            .catch((error: any) => {
                 reject(error);
             });
     });
@@ -35,8 +53,8 @@ const setTreeData = (arr: CategoryData[]) => {
         delete item.children;
     });
     const map: any = {}; // 构建map
-    arr.forEach(i => {
-        map[i.categoryId] = i; // 构建以area_id为键 当前数据为值
+    arr.forEach((item: any) => {
+        map[item.categoryId] = item; // 构建以area_id为键 当前数据为值
     });
 
     const treeData: CategoryData[] = [];
@@ -54,186 +72,41 @@ const setTreeData = (arr: CategoryData[]) => {
 
 interface DistributorParams {
     /** 店铺类型 */
-    shop_type: string;
+    shop_type?: string;
     /** 销商关键词搜索 */
-    key_word: string;
+    key_word?: string;
     /** 货源商品id */
     origin_num_iid: string;
     /** 页码 */
-    page_no: number;
+    page_no?: number;
     /** 页面大小 */
-    page_size: number;
+    page_size?: number;
 
 }
+
 const ITEM_LIST_URL = 'Distributeitem/getItemListByOriginNumIid';
-const response = {
-    "code": 200,
-    "message": "success",
-    "result": {
-        "items": [
-            {
-                "relation_id": "3",
-                "shop_type": "dy",
-                "num_iid": "3573047465437452676",
-                "origin_num_iid": "1300225082",
-                "user_id": "210191",
-                "user_name": "账期-测试",
-                "shop_name": "路口的明天",
-                "shop_id": "5"
-            },
-            {
-                "relation_id": "3",
-                "shop_type": "dy",
-                "num_iid": "3573047465437222452676",
-                "origin_num_iid": "130022et2345082",
-                "user_id": "210191",
-                "user_name": "账期-测试",
-                "shop_name": "路口的明天",
-                "shop_id": "5"
-            },
-            {
-                "relation_id": "3",
-                "shop_type": "dy",
-                "num_iid": "3573047463335437452676",
-                "origin_num_iid": "1300223434525082",
-                "user_id": "210191",
-                "user_name": "账期-测试",
-                "shop_name": "路口的明天",
-                "shop_id": "5"
-            },
-            {
-                "relation_id": "3",
-                "shop_type": "dy",
-                "num_iid": "3573047465434447452676",
-                "origin_num_iid": "13002252343453082",
-                "user_id": "210191",
-                "user_name": "账期-测试",
-                "shop_name": "路口的明天",
-                "shop_id": "5"
-            }
-        ],
-        "total_amount": "1"
-    }
-}
+
 /**
  * 分销商列表搜索接口
  */
 export const reqSearchDistributorList = (params: DistributorParams): Promise<any> => {
-    // const { shop_type, key_word, origin_num_iid, page_no, page_size } = params;
     return new Promise((resolve, reject) => {
-        resolve(response.result);
-        // axios.get(`${ITEM_LIST_URL}?origin_num_iid=1300225082`, {
-        //     baseURL: 'https://devweb1688.aiyongtech.com',
-        //     headers: { 'X-From-App': 'biyao' },
-        //     axios.defaults.withCredentials = true，
-        // })
-        //     .then(response => {
-        //         // if (response.data.code === '4005') {
-        //         //     window.localStorage.clear();
-        //         //     location.reload()
-        //         // }
-        //         response = {
-        //             "code": 200,
-        //             "message": "success",
-        //             "result": {
-        //                 "items": [
-        //                     {
-        //                         "relation_id": "3",
-        //                         "shop_type": "dy",
-        //                         "num_iid": "3573047465437452676",
-        //                         "origin_num_iid": "1300225082",
-        //                         "user_id": "210191",
-        //                         "user_name": "账期-测试",
-        //                         "shop_name": "路口的明天",
-        //                         "shop_id": "5"
-        //                     }
-        //                 ],
-        //                 "total_amount": "1"
-        //             }
-        //         }
-        //         resolve(response);
-        //     }, err => {
-        //         reject(err);
-        //     })
-        //     .catch((error) => {
-        //         reject(error);
-        //     });
-    });
-};
-
-/**
- * 获取类目选项
- * @returns 
- */
-export const getCategoryOptions = () => {
-    return new Promise((resolve, reject) => {
-        const nowDate = moment().format('YY-MM-DD');
-        const dataJson = localStorage.getItem('categoryOptions');
-        if (dataJson) {
-            const data = JSON.parse(dataJson);
-            // 同一天获取
-            if (data.storageDate == nowDate) {
-                // 处理一下数据再返回
-                const categoryTreeData = setTreeData(data.categoryData);
-                resolve(categoryTreeData);
-            }
-        }
-        axios.post('/itemManage/getCategoryList', null)
-            .then((response) => {
-                const categoryData = response.data;
-                const categoryOptions = {
-                    storageDate: nowDate,
-                    categoryData,
-                };
-                // 做个缓存
-                localStorage.setItem('categoryOptions', JSON.stringify(categoryOptions));
-                const categoryTreeData = setTreeData(categoryData);
-                resolve(categoryTreeData);
+        axios.get(ITEM_LIST_URL, {
+            baseURL: config.BASE_1688_URL,
+            headers: { 'X-From-App': 'biyao' },
+            params,
+        })
+            .then((response: any) => {
+                if (response.code !== 200) {
+                    resolve([]);
+                }
+                resolve(response.data?.result);
             })
-            .catch((error) => {
-                console.log(error);
-            });
-    });
-};
-
-/**
- * 获取基础库存同步
- */
-export const getBasicStockValue = () => {
-    return new Promise((resolve, reject) => {
-        axios.post('/itemManage/getStockWarningInfo', { cid: 0 })
-            .then((response) => {
-                console.log(response, '????respons库存同步e');
-                resolve({
-                    prewarningValue: response.prewarningValue || 0,
-                    restoreValue: response.restoreValue || 0,
-                });
-            })
-            .catch((error) => {
+            .catch((error: any) => {
                 reject(error);
-                console.log(error);
             });
     });
 };
-
-/**
- * 更新基础类目
- * @param params 
- * @returns 
- */
-export const updateStockWarningInfo = (params) => {
-    return new Promise((resolve, reject) => {
-        axios.post('/itemManage/updateStockWarningInfo', params)
-            .then((response) => {
-                console.log(response);
-                
-            })
-            .catch((error) => {
-                reject(error);
-                console.log(error);
-            });
-    });
-}
 
 /**
  * 下架分销商商品
@@ -241,7 +114,7 @@ export const updateStockWarningInfo = (params) => {
 export const deleteRelation = (params) => {
     return new Promise((resolve, reject) => {
         axios.post('/Distributeitem/deleteRelation', params, {
-            baseURL: 'http://devweb1688.aiyongtech.com',
+            baseURL: config.BASE_1688_URL,
             withCredentials: false,
             headers: { 'X-From-App': 'biyao' },
         })
@@ -255,16 +128,139 @@ export const deleteRelation = (params) => {
 };
 
 /**
- * 储存特殊类目的值
+ * 获取类目选项
+ * @returns
  */
-export const stockageWarnValueUpdate = (params) => {
-    // return new Promise((resolve, reject) => {
-    //     axios.post('/item/stockageWarnValueUpdate', params, { baseURL: 'http://192.168.1.65:8080' })
-    //         .then((response) => {
-    //             console.log(response, '????respons库存同步e');
-    //         })
-    //         .catch((error) => {
-    //             reject(error);
-    //         });
-    // });
+export const getCategoryOptions = (): Promise<any> => {
+    return new Promise((resolve, reject) => {
+        const nowDate = moment().format('YY-MM-DD');
+        const dataJson = localStorage.getItem('categoryOptions');
+        if (dataJson) {
+            const data = JSON.parse(dataJson);
+            // 同一天获取
+            if (data.storageDate == nowDate) {
+                // 处理一下数据再返回
+                const categoryTreeData = setTreeData(data.categoryData);
+                resolve(categoryTreeData);
+            }
+        }
+        axios.post('/itemManage/getCategoryList', null)
+            .then((response: any) => {
+                if (response.code !== 200) {
+                    resolve([]);
+                }
+                const categoryData = response.data.data;
+                if (!categoryData) {
+                    resolve([]);
+                }
+                const categoryOptions = {
+                    storageDate: nowDate,
+                    categoryData,
+                };
+                // 做个缓存
+                localStorage.setItem('categoryOptions', JSON.stringify(categoryOptions));
+                const categoryTreeData = setTreeData(categoryData);
+                resolve(categoryTreeData);
+            })
+            .catch((error: any) => {
+                reject(error);
+            });
+    });
 };
+
+/**
+ * 获取基础库存同步
+ */
+export const getBasicStockValue = () => {
+    return new Promise((resolve, reject) => {
+        const dataJson = localStorage.getItem('basicStockValue');
+        if (dataJson) {
+            const data = JSON.parse(dataJson);
+            resolve(data);
+        }
+        axios.post('/itemManage/getStockWarningInfo', null)
+            .then((response: any) => {
+                if (response.code !== 200) {
+                    resolve([]);
+                }
+                resolve(response.data);
+            })
+            .catch((error: any) => {
+                reject(error);
+            });
+    });
+};
+
+/**
+ * 更新基础类目
+ * @param params
+ * @returns
+ */
+export const updateStockWarningInfo = (params: StockWarningInfo[]) => {
+    return new Promise((resolve, reject) => {
+        axios.post('/itemManage/updateStockWarningInfo', params)
+            .then((response: any) => {
+                if (response.code !== 200) {
+                    message.info('保存失败');
+                    resolve({});
+                }
+                message.info('保存成功');
+                resolve({});
+            })
+            .catch((error: any) => {
+                reject(error);
+            });
+    });
+};
+
+/**
+ * 删除指定类目预警值
+ * @param params
+ * @returns
+ */
+export const delStockWarningInfo = (params: string[]) => {
+    return new Promise((resolve, reject) => {
+        axios.post('/itemManage/delStockWarningInfo', params)
+            .then((response: any) => {
+                if (response.code !== 200) {
+                    message.info('保存失败');
+                    resolve({});
+                }
+                message.info('保存成功');
+                resolve({});
+            })
+            .catch((error: any) => {
+                reject(error);
+            });
+    });
+};
+
+/** 导出类目传入参数 */
+interface ExportItemParams {
+    spuIds?: string[];
+    thirdCategoryId?: number;
+    distributionState?: number;
+}
+
+/**
+ * 导出商品数据
+ */
+export const exportItemData = (params: ExportItemParams) => {
+    const { spuIds = [], thirdCategoryId, distributionState } = params;
+    // 拼接url
+    const urlList = [];
+    if (spuIds.length) {
+        const spuArr = spuIds.map(item => `spuIds[]=${item}`);
+        const spuStr = spuArr.join('&');
+        urlList.push(spuStr);
+    }
+    if (thirdCategoryId) {
+        urlList.push(`thirdCategoryId=${thirdCategoryId}`);
+    }
+    if (distributionState) {
+        urlList.push(`distributionState=${distributionState}`);
+    }
+    const urlData = urlList.join('&');
+    window.open(`${config.BASE_URL}/itemManage/exportItemData?${urlData}`);
+};
+

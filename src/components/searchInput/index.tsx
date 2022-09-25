@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { ChangeEvent } from 'react';
 import { Input } from 'antd';
 import { SearchOutlined } from '@ant-design/icons';
 import './index.scss';
@@ -36,8 +36,8 @@ class SearchInput extends React.Component<IProps, IState> {
     /**
      * 改变输入框值
      */
-    changeInputValue = (e): void => {
-        this.setState({ value: e.target.value });
+    changeInputValue = (event: ChangeEvent<any>): void => {
+        this.setState({ value: event.target.value });
     }
 
     /**

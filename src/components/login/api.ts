@@ -9,8 +9,8 @@ export interface PassWordLoginParams {
 
 /**
  * 登陆请求接口
- * @param params 
- * @returns 
+ * @param params
+ * @returns
  */
 export const passwordlogin = (params: PassWordLoginParams) => {
     return new Promise((resolve, reject) => {
@@ -18,11 +18,14 @@ export const passwordlogin = (params: PassWordLoginParams) => {
             account: params.username,
             password: params.password,
         }, { withCredentials: false })
-            .then((response) => {
-                resolve(response);
+            .then((response: any) => {
+                if (response.code === 200) {
+                    resolve(response.data);
+                }
+                resolve('error');
             })
-            .catch((error) => {
-                resolve(error);
+            .catch(() => {
+                reject('error');
             });
     });
 };

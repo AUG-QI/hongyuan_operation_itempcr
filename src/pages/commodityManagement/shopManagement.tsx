@@ -1,42 +1,12 @@
-import { Space, Table } from 'antd';
+import { message, Space, Table } from 'antd';
 import { TableRowSelection } from 'antd/lib/table/interface';
 import React from 'react';
-import { useParams } from 'react-router';
 import FooterPage from '../../components/footerPage';
 import SearchInput from '../../components/searchInput';
 import SelectPlatform, { PLATFORM_IMG } from '../../components/selectPlatform';
 import { isEmpty, transformationObject, UrlData } from '../../services/utils';
 import { deleteRelation, reqSearchCommodity, reqSearchDistributorList } from './api';
 import { ItemsTableList } from './commodityContent';
-
-/** 分销商表格头部 */
-const DISTRIBUTORS_HEAD_TITLE = [
-    {
-        title: '平台名称',
-        dataIndex: 'name',
-    },
-    {
-        title: '分销商ID',
-        dataIndex: 'age',
-    },
-    {
-        title: '分销商名称',
-        dataIndex: 'address',
-    },
-    {
-        title: '店名',
-        dataIndex: 'address',
-    },
-    {
-        title: '操作',
-        dataIndex: 'address',
-        render: (_, record) => (
-            <Space size="middle">
-                <a>下架</a>
-            </Space>
-        ),
-    },
-];
 
 const PLATFORM_MAP = {
     dy: 'doudian',
@@ -200,9 +170,11 @@ class ShopManagement extends React.Component<IProps, IState> {
             origin_num_iid,
         };
         const res = await deleteRelation(data);
-        console.log(res);
-        
-        
+        if (res !== 'success') {
+            message.info('下架失败');
+            return;
+        }
+        message.info('下架失败');
     }
     /**
      * 改变表格状态
@@ -241,7 +213,6 @@ class ShopManagement extends React.Component<IProps, IState> {
      * @returns
      */
     changePageSize = (val) => {
-        console.log('changePageSize');
         const { secarchInfo } = this.state;
         secarchInfo.pageNo = val;
         this.setState({ secarchInfo }, () => {
@@ -257,9 +228,19 @@ class ShopManagement extends React.Component<IProps, IState> {
         if (val === 'takenDown') {
             // 拿到值
             const { deleteList } = this.state;
+            let successNum = 0;
+            let errorNum = 0;
+
             deleteList.forEach(async (item) => {
-               const res = await deleteRelation(item);
-            })
+                await deleteRelation(item).then(res => {
+                    successNum += 1;
+                })
+                    .catch(err => {
+                        errorNum += 1;
+                    });
+            });
+            const messageInfo = (successNum && errorNum) ? `成功${successNum}笔，失败${errorNum}笔` : (successNum ? '下架成功' : '下架失败');
+            message.info(messageInfo);
         }
     };
     /**
@@ -267,7 +248,6 @@ class ShopManagement extends React.Component<IProps, IState> {
      * @returns
      */
     handleSelectChange = (val: string) => {
-        console.log('vhandleSelectChange');
         const { secarchInfo } = this.state;
         secarchInfo.shopType = val;
         this.setState({ secarchInfo }, () => {
@@ -278,7 +258,6 @@ class ShopManagement extends React.Component<IProps, IState> {
      * 处理input搜索
      */
     handleInputSearch = (val: string | number) => {
-        console.log('handleInputSearch');
         const { secarchInfo } = this.state;
         secarchInfo.keyWord = val;
         this.setState({ secarchInfo }, () => {
@@ -290,7 +269,15 @@ class ShopManagement extends React.Component<IProps, IState> {
      */
     hadleAllSearch = async () => {
         const { secarchInfo, titleData } = this.state;
-        const { items = [], total_amount = 0 } = await reqSearchDistributorList(secarchInfo);
+        const secarchData = {
+            origin_num_iid: secarchInfo.originNumId,
+            page_no: secarchInfo.pageNo,
+            page_size: secarchInfo.pageSize,
+        };
+        if (secarchInfo.shopType[0] !== 'all') {
+            secarchData.key_word = secarchInfo.keyWord;
+        }
+        const { items = [], total_amount = 0 } = await reqSearchDistributorList(secarchData);
         const itemTableList = items.map(item => {
             const platform = PLATFORM_MAP[item.shop_type];
             return item.url = PLATFORM_IMG[platform];
@@ -299,7 +286,7 @@ class ShopManagement extends React.Component<IProps, IState> {
         this.setState({ itemTableList: items });
     }
     render (): React.ReactNode {
-        const { rowSelection, isAllValue, storesItemNum, itemTableList, titleData } = this.state;
+        const { rowSelection, isAllValue, itemTableList, titleData } = this.state;
         return (
             <div className="shop-management">
                 <div className="shop-management-title commodity-location">
@@ -347,6 +334,7 @@ class ShopManagement extends React.Component<IProps, IState> {
                         handelOperationBtn={this.handelOperationBtn}
                         from="distributors"
                         total={titleData.distributionNum}
+                        selectNum={rowSelection.selectedRowKeys.length}
                     ></FooterPage>
                 </div>
             </div>

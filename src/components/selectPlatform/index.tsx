@@ -33,21 +33,25 @@ export const PLATFORM_OPTIONS = [
         label: '抖音',
     },
     {
-        value: 'kuai',
-        label: '快手',
-    },
-    {
-        value: 'hong',
-        label: '小红书',
-    },
-    {
         value: 'youzan',
         label: '有赞',
     },
-    {
-        value: 'shipinhao',
-        label: '视频号',
-    },
+    // {
+    //     value: 'kuai',
+    //     label: '快手',
+    // },
+    // {
+    //     value: 'hong',
+    //     label: '小红书',
+    // },
+    // {
+    //     value: 'youzan',
+    //     label: '有赞',
+    // },
+    // {
+    //     value: 'shipinhao',
+    //     label: '视频号',
+    // },
 ];
 
 interface IProps {

@@ -13,7 +13,7 @@ export interface UrlData {
  * @param obj
  * @returns {boolean}
  */
-export function isEmpty(obj: any): obj is undefined | null | '' {
+export function isEmpty (obj: any): obj is undefined | null | '' {
     if (obj === undefined || obj === '' || obj === null) {
         return true;
     }
@@ -45,16 +45,16 @@ export function isEmpty(obj: any): obj is undefined | null | '' {
 /**
  * 获取拼接地址url
  */
-export const transformationObject = (url): UrlData => {
-    if(isEmpty(url.split("?")[1])) return null;
-        let str = url;
-        let paramArr = str.split('?');
-        let arr= paramArr[1].split('&')
-        let obj = {};
-        for(let i = 0;i<arr.length;i++) {
-            let tmp_arr = arr[i].split("=");
-            obj[tmp_arr[0]] = tmp_arr[1];
-        }
+export const transformationObject = (url: string): any => {
+    if (isEmpty(url.split("?")[1])) return null;
+    const str = url;
+    const paramArr = str.split('?');
+    const arr = paramArr[1].split('&');
+    const obj: any = {};
+    for (let index: number = 0; index < arr.length; index++) {
+        const tmp_arr = arr[index].split("=");
+        obj[tmp_arr[0]] = tmp_arr[1];
+    }
     return obj;
-  }
-export const NOOP = () => {};
+};
+

@@ -21,6 +21,8 @@ interface IState {
     total: number;
     /** 类目信息 */
     categoryInfo: string;
+    /** 商品页面加载 */
+    shopManagementLoading: boolean;
 }
 
 /** 类目选择项 */
@@ -66,6 +68,7 @@ class CommodityManagement extends React.Component<IProps, IState>  {
                 pageSize: 20,
             },
             categoryInfo: '',
+            shopManagementLoading: true,
         };
     }
     componentDidMount (): void {
@@ -79,6 +82,10 @@ class CommodityManagement extends React.Component<IProps, IState>  {
         const { searchData } = this.state;
         // 获取类目数据
         const categoryoptions: any = await getCategoryOptions();
+        if (!categoryoptions.length) {
+            this.setState({  shopManagementLoading: false  });
+            return;
+        }
         // 设置默认数据 - 第一条数据
         let firstData = {
             data: [],
@@ -157,11 +164,6 @@ class CommodityManagement extends React.Component<IProps, IState>  {
      * @param val
      */
     handleInputSearch = (val: string) => {
-        // 去空
-        const inputValue = val.trim();
-        if (!inputValue) {
-            return;
-        }
         const { searchData } = this.state;
         // 判断是什么类型搜索
         if (numberRegular.test(val)) {
@@ -207,7 +209,7 @@ class CommodityManagement extends React.Component<IProps, IState>  {
         const { list, total } = await reqSearchCommodity(reqData);
         // 整理成能传入tablelist的文件 itemTableList
         const itemTableList = this.handleItemTableList(list);
-        this.setState({ itemTableList, total });
+        this.setState({ itemTableList, total, shopManagementLoading: false });
     }
 
     /**
@@ -219,19 +221,14 @@ class CommodityManagement extends React.Component<IProps, IState>  {
         const { categoryInfo } = this.state;
         tableData = data.map(item => {
             return {
-                name: item.productName,
-                // 因为会有null 要处理成暂无图片
-                url: item.portalSquareImgUrl || '',
-                key: item.spuId,
-                category: item.salePoint,
-                liangdao: '',
-                leimu: categoryInfo,
+                ...item,
+                categoryInfo,
             };
         });
         return tableData;
     }
     render () {
-        const { categoryoptions, itemTableList, searchData, total  } = this.state;
+        const { categoryoptions, itemTableList, searchData, total, shopManagementLoading  } = this.state;
         return <div className='commodity-management'>
             <div className="commodity-management-title location">
                 <Cascader
@@ -247,7 +244,7 @@ class CommodityManagement extends React.Component<IProps, IState>  {
                 </div>
             </div>
             <div className="commodity-management-content">
-                <CommodityContent itemTableList={itemTableList} total = {total} changePageSize={this.handleChangePageSize}></CommodityContent>
+                <CommodityContent itemTableList={itemTableList} total = {total} changePageSize={this.handleChangePageSize} searchData={searchData}  shopManagementLoading={shopManagementLoading}></CommodityContent>
             </div>
         </div>;
     }

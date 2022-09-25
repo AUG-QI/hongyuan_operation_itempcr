@@ -1,10 +1,13 @@
 import axios from '../services/axios';
-import { api } from './api';
 
 export interface UserInfo {
     userId?: number;
 }
 
+/**
+ * 设置用户信息
+ * @param res
+ */
 export const setUserInfo = (res: any) => {
     window.userInfo = res;
 };
@@ -16,24 +19,26 @@ export const fetchUserInfo = (): Promise<Partial<UserInfo>> => {
     return new Promise<Partial<UserInfo>>((resolve) => {
         axios
             .post('/user/getUserInfo', null)
-            .then((response) => {
+            .then((response: any) => {
+                if (response.code === 200) {
+                    resolve(response.data);
+                }
                 resolve(response || {});
             })
-            .catch((error) => {
+            .catch(() => {
                 resolve({});
             });
     });
 };
 
-// 获取用户信息
+/**
+ * 获取用户信息
+ */
 export const getUserData = async () => {
     if (!window.userInfo?.nick) {
-        // console.log("#查看用户是否需要刷新信息");
         const userInfo = await fetchUserInfo();
-        // debugger;
         if (!userInfo.nick) {
             location.hash = '/login';
-            // return;
         }
         await setUserInfo(userInfo);
     }

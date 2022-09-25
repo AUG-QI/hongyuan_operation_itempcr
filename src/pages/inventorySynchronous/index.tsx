@@ -2,16 +2,20 @@ import React from 'react';
 import {
     Alert, Button, Input, message, Modal, Tree
 } from 'antd';
-import { getBasicStockValue, getCategoryOptions, stockageWarnValueUpdate, updateStockWarningInfo } from '../commodityManagement/api';
+import { delStockWarningInfo, getBasicStockValue, getCategoryOptions, updateStockWarningInfo } from '../commodityManagement/api';
 import './index.scss';
 
+/** 特殊预警标题数据 */
 const SPECIAL_STOCK_TITLE_DATA: string[] = [
     '类目',
     '预警值',
     '上升阈值',
     '操作',
 ];
+/** 数字正则 */
 export const numberRegular = /^[0-9]*$/;
+
+/** 提示语 */
 const ALERT_MSG: string =
     '提示：1.sku库存小于预警值时，sku自动变成告罄状态   2.sku库存从预警值到预警值+上升阈值时，sku自动上架且同步最新库存   3.类目设置特殊库存同步后，以特殊库存同步为准';
 
@@ -26,6 +30,13 @@ interface IState {
     treeData: any;
     basicStockPreWarning: string;
     basicStockRestore: string;
+    inventoryCategoryData: any;
+    /** 预警值 */
+    prewarningValue: number | undefined;
+    /** 上升阔值 */
+    restoreValue: number | undefined;
+    /** 将要删除名单 */
+    willDeletedList: string[];
 }
 /** 检查input框回调 */
 interface CheckInput {
@@ -45,28 +56,40 @@ class InventorySynchronous extends React.Component<{}, IState> {
             upValue: '',
             checkedKeys: [],
             treeData: [],
-            basicStockPreWarning: '',
-            basicStockRestore: '',
+            prewarningValue: undefined,
+            restoreValue: undefined,
+            inventoryCategoryData: [],
+            willDeletedList: [],
         };
     }
     async componentDidMount () {
-        // 监听路由是否变化
-        window.addEventListener('changeLogisticsSinglePrintDefaultPrinter', (e) => {
-            this.setState({ selectPrinter: defaultPrinter });
-        });
-        const selectData = JSON.parse(sessionStorage.getItem('targetKeys')) || [];
-        if (selectData.length) {
-            const checkedKeys = selectData.map(item => item.id);
-            this.setState({ selectData, checkedKeys });
-        }
+        this.init();
         // 获取类目属性
         const treeData = await getCategoryOptions();
         this.setState({ treeData });
-        // 获取基础库存同步
-        const { prewarningValue: basicStockPreWarning, restoreValue: basicStockRestore } = await getBasicStockValue();
-        console.log(basicStockPreWarning,basicStockRestore, '????/basicStockRestore' );
-        
-        this.setState({ basicStockPreWarning, basicStockRestore });
+    }
+    init = async () => {
+        // 获取库存同步数据
+        const data = await getBasicStockValue();
+        if (!data.length) {
+            return;
+        }
+        // 设置基础库存数据
+        const { prewarningValue, restoreValue } = this.getBasicStockPreWarningInfo(data);
+        // 展示特殊类目库存
+        const inventoryCategoryData = data.filter(item => item.cid != 0);
+        this.setState({ inventoryCategoryData, prewarningValue, restoreValue });
+    }
+    /**
+     * 获取基础类目信息
+     */
+    getBasicStockPreWarningInfo = (data) => {
+        const basisInfo = data.find(item => item.cid == 0);
+        console.log(basisInfo, '????没有');
+        return {
+            prewarningValue: basisInfo.prewarningValue,
+            restoreValue: basisInfo.restoreValue,
+        };
     }
     /**
      * 类目设置弹框
@@ -77,16 +100,17 @@ class InventorySynchronous extends React.Component<{}, IState> {
     /**
      * 确认
      */
-    handleOk = () => {
+    handleOk = async () => {
         const { selectData = [], alertValue, upValue } = this.state;
         if (!selectData.length || !alertValue.trim() || !upValue.trim()) return message.info('请输入完整');
         if (!numberRegular.test(alertValue) || !numberRegular.test(upValue)) return message.info('输入框需要纯数字');
-        this.setState({ isModalOpen: false });
-        sessionStorage.setItem(`targetKeys`, JSON.stringify(selectData));
+        await updateStockWarningInfo(selectData);
+        this.init();
+        this.setState({ isModalOpen: false, selectData: [],  alertValue: '', upValue: '', checkedKeys: [] });
     };
     /**
      * 检查输入框内容
-     * @param key 
+     * @param key
      */
     checkInputValue = (key: string[]): CheckInput => {
         key.forEach(item => {
@@ -99,18 +123,20 @@ class InventorySynchronous extends React.Component<{}, IState> {
      * 取消
      */
     handleCancel = () => {
-        const selectData = JSON.parse(sessionStorage.getItem('targetKeys')) || [];
-        const checkedKeys = selectData.map(item => item.id);
+        const { selectData } = this.state;
+        const checkedKeys = selectData.map(item => item.cid);
         this.setState({ isModalOpen: false, selectData, checkedKeys });
     };
-    changeInputValue = (type, e) => {
+    changeInputValue = (type: string, e) => {
         const { selectData } = this.state;
+        const data = {
+            alertValue: 'prewarningValue',
+            upValue: 'restoreValue',
+        };
         selectData.forEach(item => {
-            item.inputValue = {
-                ...item.inputValue,
-                [type]: e.target.value,
-            };
+            item[data[type]] = e.target.value;
         });
+        console.log('改变input', '????', selectData);
         this.setState({ [type]: e.target.value, selectData });
     }
     /**
@@ -143,18 +169,16 @@ class InventorySynchronous extends React.Component<{}, IState> {
      * 删除所有数据
      * @returns 
      */
-    delAllData = () => {
-        sessionStorage.removeItem(`targetKeys`);
-        this.setState({ selectData: [] });
+    delAllData = async () => {
+        const { inventoryCategoryData } = this.state;
+        const ids = inventoryCategoryData.map(item => item.cid);
+
+        this.setState({ inventoryCategoryData: [], willDeletedList: ids });
     }
     /**
      * 特殊库存检查弹框底部
      */
     checkSpecialStockDialogFooterRender = () => {
-        const { selectData } = this.state;
-        if (!selectData.length) {
-            return null;
-        }
         return (
             <>
                 <div onClick={this.delAllData}>全部清空</div>
@@ -173,19 +197,23 @@ class InventorySynchronous extends React.Component<{}, IState> {
     /**
      * 取消修改特殊库存同步
      */
-    closeModifySpecialStock  = () => {
-        const selectData = JSON.parse(sessionStorage.getItem('targetKeys')) || [];
-        this.setState({ checkSpecialStockDialogVisible: false, selectData });
+    closeModifySpecialStock  = async () => {
+        this.init();
+        this.setState({ checkSpecialStockDialogVisible: false });
     }
     /**
      * 提交修改特殊类目
      * @returns
      */
-    submitModifySpecialStock = () => {
-        const { selectData } = this.state;
-        const checkedKeys = selectData.map(item => item.id);
-        sessionStorage.setItem(`targetKeys`, JSON.stringify(selectData));
-        this.setState({ checkSpecialStockDialogVisible: false, checkedKeys });
+    submitModifySpecialStock = async () => {
+        const { willDeletedList } = this.state;
+        // 如果有删除的就去删掉
+        if (willDeletedList.length) {
+            await delStockWarningInfo(willDeletedList);
+        }
+        const { inventoryCategoryData } = this.state;
+        await updateStockWarningInfo(inventoryCategoryData);
+        this.setState({ checkSpecialStockDialogVisible: false, willDeletedList: [] });
     };
     /**
      * 关闭检查特殊类目弹框
@@ -198,8 +226,8 @@ class InventorySynchronous extends React.Component<{}, IState> {
      * 特殊库存检查内容
      */
     checkSpecialStockDialogBodyRender = () => {
-        const data = JSON.parse(sessionStorage.getItem('targetKeys')) || [];
-        if (!data.length) {
+        const { inventoryCategoryData } = this.state;
+        if (!inventoryCategoryData.length) {
             return <div className="none-data">暂无数据</div>;
         }
         return (
@@ -210,46 +238,44 @@ class InventorySynchronous extends React.Component<{}, IState> {
                     })}
                 </div>
                 <div className="special-stock-info">
-                    {this.checkTargetKeysRender(data)}
+                    {this.checkTargetKeysRender()}
                 </div>
             </div>
         );
     };
+    /**
+     * 改变input框
+     * @param type 
+     * @param id 
+     * @param e 
+     */
     changeItemInput = ( type, id, e) => {
-        console.log(type, id,  e.target.value);
-        const { selectData } = this.state;
-        selectData.forEach(item => {
-            if (item.id == id) {
-                console.log(item, '????item');
-                
-                item.inputValue = {
-                    ...item.inputValue,
-                    [type]: e.target.value,
-                }
+        const { inventoryCategoryData } = this.state;
+        inventoryCategoryData.forEach(item => {
+            if (item.cid == id) {
+                item[type] =  e.target.value;
             }
-        })
-        this.setState({selectData});
-
+        });
+        this.setState({ inventoryCategoryData });
     }
     checkTargetKeysRender = () => {
-        const { selectData } = this.state;
-        // const selectData = JSON.parse(sessionStorage.getItem('targetKeys')) || [];
+        const { inventoryCategoryData } = this.state;
         return (
             <div>
-                {selectData.map((item) => {
+                {inventoryCategoryData.map((item) => {
                     return (
-                        <div key={item.id} className="special-stock-title">
+                        <div key={item.cid} className="special-stock-title">
                             <span>{item.name}</span>
                             <span>
-                                <Input onChange={this.changeItemInput.bind(this, 'alertValue', item.id)} value={item.inputValue.alertValue}></Input>
+                                <Input onChange={this.changeItemInput.bind(this, 'prewarningValue', item.cid)} value={item.prewarningValue}></Input>
                             </span>
                             <span>
-                                <Input onChange={this.changeItemInput.bind(this, 'upValue', item.id)}  value={item.inputValue.upValue}></Input>
+                                <Input onChange={this.changeItemInput.bind(this, 'restoreValue', item.cid)}  value={item.restoreValue}></Input>
                             </span>
                             <span
                                 onClick={this.deltargetKeysItem.bind(
                                     this,
-                                    item.id
+                                    item.cid
                                 )}
                             >
                                 删除
@@ -264,18 +290,29 @@ class InventorySynchronous extends React.Component<{}, IState> {
      * 删除单个库存值
      * @param key 
      */
-    deltargetKeysItem = (key) => {
-        const { selectData } = this.state;
-        const newKeys = selectData.filter((item) => item.id !== key);
-        this.setState({ selectData: newKeys });
+    deltargetKeysItem = async (key: string) => {
+        const { inventoryCategoryData, willDeletedList } = this.state;
+        const newKeys = inventoryCategoryData.filter((item) => item.cid != key);
+        willDeletedList.push(key);
+        this.setState({ inventoryCategoryData: newKeys, willDeletedList });
     }
-    onCheck = (checkedKeys, e) => {
-        console.log(checkedKeys, 'checkedKeys');
+    /**
+     * 选择类目
+     * @param checkedKeys 
+     * @param e 
+     */
+    onCheck = (checkedKeys: string[], e) => {
         const {  alertValue, upValue } = this.state;
         const selectData = this.getID(e.checkedNodes, alertValue, upValue);
         this.setState({ selectData, checkedKeys });
     }
-    
+    /**
+     * 获取类目id
+     * @param arr 
+     * @param alertValue 
+     * @param upValue 
+     * @returns 
+     */
     getID = (arr, alertValue, upValue) => {
         const data = [];
         arr.forEach(item => {
@@ -284,11 +321,9 @@ class InventorySynchronous extends React.Component<{}, IState> {
             } else {
                 data.push({
                     name: item.categoryName,
-                    id: item.categoryId,
-                    inputValue: {
-                        alertValue,
-                        upValue,
-                    },
+                    cid: item.categoryId,
+                    prewarningValue: alertValue,
+                    restoreValue: upValue,
                 });
             }
         });
@@ -317,7 +352,7 @@ class InventorySynchronous extends React.Component<{}, IState> {
                 <div className='select-items'>
                     {
                         selectData.map(item =>  {
-                            return <div key={item.id}>
+                            return <div key={item.cid}>
                                 {item.name}
                             </div>;
                         })
@@ -332,39 +367,27 @@ class InventorySynchronous extends React.Component<{}, IState> {
      */
     saveSte = async () => {
         // 1.检查基础库存同步
-        const { basicStockPreWarning, basicStockRestore, selectData } = this.state;
-        const data = [];
-        selectData.forEach(item => {
-            data.push({
-                id: item.id,
-                prewarningValue: item.inputValue.alertValue,
-                restoreValue: item.inputValue.upValue,
-            });
-        });
+        const { prewarningValue, restoreValue } = this.state;
         const basicStock = [{
-            id: 0,
-            prewarningValue: basicStockPreWarning,
-            restoreValue: basicStockRestore,
-        }, ...data];
-        console.log(basicStock, '????basicStock????');
-        
-        const res = await updateStockWarningInfo(basicStock);
-    
+            cid: 0,
+            prewarningValue,
+            restoreValue,
+            name: '基础类目属性',
+        }];
+        await updateStockWarningInfo(basicStock);
         // 特殊类目保存
-        sessionStorage.removeItem(`targetKeys`);
         this.setState({ checkSpecialStockDialogVisible: false, selectData: [], checkedKeys: [],  alertValue: '', upValue: '' });
-     }
-     /**
+    }
+    /**
       * 修改基础预警值
-      * @returns 
-      */
-    changeBasicStockValue = (type, e) => {
+      * @returns
+    */
+    changeBasicStockValue = (type: string, e) => {
         const value = e.target.value;
-        this.setState({ [type]:  e.target.value });
+        this.setState({ [type]:  value });
     }
     render () {
-        const selectData = JSON.parse(sessionStorage.getItem('targetKeys')) || [];
-        const { isModalOpen, checkSpecialStockDialogVisible, basicStockPreWarning, basicStockRestore } =
+        const { isModalOpen, checkSpecialStockDialogVisible, prewarningValue, restoreValue, inventoryCategoryData } =
             this.state;
         return (
             <div className="inventory-synchronous">
@@ -374,11 +397,11 @@ class InventorySynchronous extends React.Component<{}, IState> {
                     <div>
                         <div className="basis-ipt">
                             <span>预警值：</span>
-                            <Input value={basicStockPreWarning} onChange={this.changeBasicStockValue.bind(this, 'basicStockPreWarning')} placeholder="请输入预警值" />
+                            <Input value={prewarningValue} onChange={this.changeBasicStockValue.bind(this, 'prewarningValue')} placeholder="请输入预警值" />
                         </div>
                         <div className="basis-ipt">
                             <span>上升阔值：</span>
-                            <Input value={basicStockRestore}  onChange={this.changeBasicStockValue.bind(this, 'basicStockRestore')}  placeholder="请输入上升阔值" />
+                            <Input value={restoreValue}  onChange={this.changeBasicStockValue.bind(this, 'restoreValue')}  placeholder="请输入上升阔值" />
                         </div>
                     </div>
                 </div>
@@ -393,9 +416,9 @@ class InventorySynchronous extends React.Component<{}, IState> {
                             请选择类目设置
                         </span>
                     </div>
-                    {selectData.length > 0 ? (
+                    {inventoryCategoryData.length > 0 ? (
                         <div>
-                            已设置<span>{selectData.length}</span>
+                            已设置<span>{inventoryCategoryData.length}</span>
                             个类目特殊库存同步
                             <span
                                 className="operation-btn"
@@ -432,16 +455,6 @@ class InventorySynchronous extends React.Component<{}, IState> {
                     className="check-special-stock-dialog"
                 >
                     {this.checkSpecialStockDialogBodyRender()}
-                </Modal>
-                <Modal
-                    title="您确定要离开设置页面吗"
-                    open={false}
-                    onCancel={this.clickCheckSpecialStockDialogVisible.bind(
-                        this,
-                        false
-                    )}
-                >
-                    系统可能不会保存您所做的修改
                 </Modal>
             </div>
         );

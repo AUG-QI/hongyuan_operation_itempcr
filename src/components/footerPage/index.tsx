@@ -1,10 +1,9 @@
 import React from 'react';
-import { Button, Checkbox, Modal, Pagination, Upload } from 'antd';
+import { Button, Checkbox, message, Modal, Pagination } from 'antd';
 import { ContainerOutlined } from '@ant-design/icons';
-import moment from '_moment@2.29.4@moment';
 import './index.scss';
-
-const { Dragger } = Upload;
+import axios from 'axios';
+import config from '../../config';
 interface IProps {
     /** 处理全选按钮 */
     handelSelectAll: Function;
@@ -18,6 +17,8 @@ interface IProps {
     from: string;
     /** 总数 */
     total: number;
+    /** 选中数量 */
+    selectNum: number;
 }
 interface IState {
     /** 每页条数 */
@@ -29,10 +30,7 @@ interface IState {
     /** 当前页 */
     current: number;
 }
-const propsData = {
-    name: 'file',
-    multiple: true,
-};
+/** 翻页器组建 */
 class FooterPage extends React.Component<IProps, IState>  {
     constructor (props: IProps) {
         super(props);
@@ -62,99 +60,39 @@ class FooterPage extends React.Component<IProps, IState>  {
      * @returns
      */
     changePageSize = (val: number) => {
-        console.log(val, '/?????val');
         this.setState({ current: val });
         const { changePageSize } = this.props;
         changePageSize(val);
     }
 
     /**
-     * 导出商品
-     * @returns
-     */
-    exportItems = () => {
-        console.log('导出商品');
-    }
-    /**
-     * 导入商品
-     * @returns 
-     */
-    importItems = () => {
-        console.log('导入商品');
-    }
-    /**
-     * 处理导出商品
-     * @returns 
-     */
-    handelExportItems = (type: string) => {
-        console.log(type, '??????');
-        if (type === 'all') {
-            // 全部商品
-        } else if (type === 'selected') {
-            // 选中的
-            // const {} = this.state;
-        }
-    }
-    /**
      * 关闭选择框
-     * @returns 
+     * @returns
      */
     clickExportOption = (val: boolean) => {
         this.setState({ exportOptionsVisble: val });
     }
     /**
-     * handelImportItems
-     * @returns 
+     * 处理导入商品
+     * @returns
      */
     handelImportItems = () => {
-        console.log('handelImportItems');
+        this.setState({ uploadFileDialogVisible: true });
     }
     /**
-     * closeUploadInfoDialog
-     * @returns 
+     * 关闭上传弹框
+     * @returns
      */
     closeUploadInfoDialog = () => {
         this.setState({ uploadFileDialogVisible: false });
     }
     /**
      * 上传文件
-     * @returns 
+     * @returns
      */
-    updateFile = (val) => {
-        const files = val.fileList[0];
-        const userArr = [];   // 用户名结果数组
-        if (files) {
-            this.closeUploadInfoDialog();
-        }
-        if (files.size == 0) {
-            // 文件空的
-            return;
-        }
-        const reader = new FileReader();
-        reader.readAsText(files, 'gb2312');
-        console.log(reader);
-        reader.onload = function (e) {
-            const tempstr = this.result;
-            // 去除空对象组装新数组
-            // 区分类型
-            const tempArr = (
-                tempstr.split('\n')
-            );
-            // FIXME txt格式换行符会判断不为空
-            tempArr.forEach((item, index) => {
-                if (item != '' && item != undefined) {
-                    userArr.push(item);
-                }
-            });
-            // 拼装数据
-            const addData = {
-                buyerNicks: userArr,
-                reason: '批量上传',
-            };
-            // 添加黑名单
-            // self.props.actions.batchImportBlackList(addData, blType);
-            // self.batchImportDialogHide();
-        };
+    updateFile = () => {
+        const filetUpload = document.getElementById('filetUpload');
+        filetUpload?.click();
     }
     /**
      * 处理批量下架
@@ -163,18 +101,43 @@ class FooterPage extends React.Component<IProps, IState>  {
         const { handelOperationBtn } = this.props;
         handelOperationBtn('takenDown');
     }
+
+    /**
+     * 处理导出
+     * @param e 
+     */
+    onchange = (e) => {
+        const files = e.target.files;
+        const formData = new FormData();
+        formData.append('file', files[0]);
+        axios.post(`${config.BASE_URL}itemManage/importModifedFile`, formData, {
+            withCredentials: true,
+            headers: { 'Content-Type': 'multipart/form-data;charset=UTF-8' }})
+            .then((response) => {
+                if (response.data.code !== 200) {
+                    return message.info('上传失败');
+                }
+                message.info('上传成功');
+                this.setState({ uploadFileDialogVisible: false });
+            })
+            .catch(() => {
+                this.setState({ uploadFileDialogVisible: false });
+                return message.info('上传失败');
+            });
+    }
+
     render () {
-        const { from, isAllValue, handelOperationBtn, total } = this.props;
+        const { from, isAllValue, handelOperationBtn, total, selectNum } = this.props;
         const { pageSize, exportOptionsVisble, uploadFileDialogVisible, current } = this.state;
         return (
             <div className="footer-page">
                 <div className="operation-btns">
                     <Checkbox
-                        className="export-btn"
+                        className="export-checkbox"
                         checked={isAllValue === true}
                         onChange={this.handelSelectAll}
                     >
-                        全选本页
+                        全选本页 {selectNum > 0 && <span>（已选{selectNum}）</span>}
                     </Checkbox>
                     {from === 'productList' && (
                         <>
@@ -203,8 +166,8 @@ class FooterPage extends React.Component<IProps, IState>  {
                     )}
                     {
                         exportOptionsVisble && <div className='export-options'>
-                            <div className='options-item' onClick={this.handelExportItems.bind(this, 'selected')}>选择商品</div>
-                            <div className='options-item' onClick={this.handelExportItems.bind(this, 'all')}>全部商品</div>
+                            <div className='options-item' onClick={() => handelOperationBtn('exportItemSelected')}>选择商品</div>
+                            <div className='options-item' onClick={() => handelOperationBtn('exportItemsAll')}>全部商品</div>
                         </div>
                     }
                 </div>
@@ -216,21 +179,22 @@ class FooterPage extends React.Component<IProps, IState>  {
                     current={current}
                 />
                 <Modal title="导入商品信息" open={uploadFileDialogVisible} onCancel={this.closeUploadInfoDialog} footer={null} className='upload-info-dialog'>
-                    <Dragger {...propsData} onChange={this.updateFile}>
+                    <div className='ant-upload ant-upload-drag' onClick={this.updateFile} >
                         <p className="ant-upload-drag-icon">
                             <ContainerOutlined />
                         </p>
-                        <p className="ant-upload-text">点击或将文件拖拽到这里上传</p>
+                        <p className="ant-upload-text">点击到这里上传</p>
                         <p className="ant-upload-hint">
                             支持格式：.xls、.xlsx
                         </p>
-                    </Dragger>
+                    </div>
                 </Modal>
+                <input type="file" id='filetUpload' onChange={this.onchange} style={{ display: 'none' }}  />
             </div>
         );
     }
     componentWillUnmount () {
-        // document.removeEventListener('click', this.clickExportOption, false);
+        document.removeEventListener('click', this.clickExportOption.bind(this, false));
     }
 }
 export default FooterPage;

@@ -14,6 +14,7 @@ export interface LoginByPasswordProps {
 /** 登陆成功 */
 const LoginByPassword: FC<LoginByPasswordProps> = (props) => {
     const { onLoginSuccessed } = props;
+    /** 成功后的回调 */
     const handleLogin = async (values: PassWordLoginParams) => {
         const res = await passwordlogin(values);
         if (res !== 'success') {
