@@ -18,7 +18,7 @@ const LoginByPassword: FC<LoginByPasswordProps> = (props) => {
     const handleLogin = async (values: PassWordLoginParams) => {
         const res = await passwordlogin(values);
         if (res !== 'success') {
-            return message.info('账号或密码错误');
+            return message.error('账号或密码错误');
         }
         onLoginSuccessed(res);
     };

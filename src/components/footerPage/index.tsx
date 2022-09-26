@@ -1,3 +1,4 @@
+// @ts-ignore
 import React, { ChangeEvent } from 'react';
 import { Button, Checkbox, message, Modal, Pagination } from 'antd';
 import { ContainerOutlined } from '@ant-design/icons';
@@ -42,6 +43,7 @@ class FooterPage extends React.Component<IProps, IState>  {
         };
     }
     componentDidMount (): void {
+        // @ts-ignore
         document.addEventListener('click', this.clickExportOption.bind(this, false));
     }
 
@@ -69,7 +71,8 @@ class FooterPage extends React.Component<IProps, IState>  {
      * 关闭选择框
      * @returns
      */
-    clickExportOption = (val: boolean) => {
+    clickExportOption = (val: boolean, event: ChangeEvent<any>) => {
+        event.stopPropagation();
         this.setState({ exportOptionsVisble: val });
     }
     /**
@@ -77,7 +80,9 @@ class FooterPage extends React.Component<IProps, IState>  {
      * @returns
      */
     handelImportItems = () => {
+        const { handelOperationBtn } = this.props;
         this.setState({ uploadFileDialogVisible: true });
+        handelOperationBtn('importItems');
     }
     /**
      * 关闭上传弹框
@@ -110,19 +115,20 @@ class FooterPage extends React.Component<IProps, IState>  {
         const files = event.target.files;
         const formData = new FormData();
         formData.append('file', files[0]);
-        axios.post(`${config.BASE_URL}itemManage/importModifedFile`, formData, {
+        axios.post(`${config.BASE_URL}/itemManage/importModifedFile`, formData, {
             withCredentials: true,
-            headers: { 'Content-Type': 'multipart/form-data;charset=UTF-8' }})
+            headers: { 'Content-Type': 'multipart/form-data;charset=UTF-8' },
+        })
             .then((response) => {
                 if (response.data.code !== 200) {
-                    return message.info('上传失败');
+                    return message.error('上传失败');
                 }
-                message.info('上传成功');
+                message.success('上传成功');
                 this.setState({ uploadFileDialogVisible: false });
             })
             .catch(() => {
                 this.setState({ uploadFileDialogVisible: false });
-                return message.info('上传失败');
+                return message.error('上传失败');
             });
     }
 
@@ -135,7 +141,8 @@ class FooterPage extends React.Component<IProps, IState>  {
                     <Checkbox
                         className="export-checkbox"
                         checked={isAllValue === true}
-                        onChange={() => this.handelSelectAll}
+                        // @ts-ignore
+                        onChange={this.handelSelectAll}
                     >
                         全选本页 {selectNum > 0 && <span>（已选{selectNum}）</span>}
                     </Checkbox>
@@ -144,17 +151,11 @@ class FooterPage extends React.Component<IProps, IState>  {
                             <Button
                                 type="primary"
                                 className="export-btn"
-                                onClick={(event) => {
-                                    event.stopPropagation();
-                                    this.clickExportOption(true);
-                                }}
+                                onClick={this.clickExportOption.bind(this, true)}
                             >
                                 导出商品
                             </Button>
-                            <Button type="primary" onClick={() => {
-                                this.handelImportItems();
-                                handelOperationBtn('importItems');
-                            }} className="export-btn">
+                            <Button type="primary" onClick={this.handelImportItems.bind(this)} className="export-btn">
                                 导入商品
                             </Button>
                         </>
@@ -192,9 +193,6 @@ class FooterPage extends React.Component<IProps, IState>  {
                 <input type="file" id='filetUpload' onChange={this.onchange} style={{ display: 'none' }}  />
             </div>
         );
-    }
-    componentWillUnmount () {
-        document.removeEventListener('click', this.clickExportOption.bind(this, false));
     }
 }
 export default FooterPage;

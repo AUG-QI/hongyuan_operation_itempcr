@@ -28,7 +28,7 @@ export const reqSearchCommodity = (params: any): Promise<any> => {
         axios.post('/itemManage/getItemList', params)
             .then((response: any) => {
                 if (response.code !== 200) {
-                    message.info('请求商品列表发生错误');
+                    message.error('请求商品列表发生错误');
                     resolve([]);
                 }
                 resolve(response.data);
@@ -100,7 +100,7 @@ export const reqSearchDistributorList = (params: DistributorParams): Promise<any
                 if (response.code !== 200) {
                     resolve([]);
                 }
-                resolve(response.data?.result);
+                resolve(response.result);
             })
             .catch((error: any) => {
                 reject(error);
@@ -113,13 +113,23 @@ export const reqSearchDistributorList = (params: DistributorParams): Promise<any
  */
 export const deleteRelation = (params: any) => {
     return new Promise((resolve, reject) => {
-        axios.post('/Distributeitem/deleteRelation', params, {
+        const formData = new FormData();
+        for (const key in params) {
+            formData.append(key, params[key]);
+        }
+        axios.post('/Distributeitem/deleteRelation', formData, {
             baseURL: config.BASE_1688_URL,
             withCredentials: false,
             headers: { 'X-From-App': 'biyao' },
         })
-            .then((response) => {
-                console.log(response, '????respons库存同步e');
+            .then((response: any) => {
+                if (response.code && response.code !== 200) {
+                    resolve({
+                        is_success: false,
+                        error_msg: response.message,
+                    });
+                }
+                resolve(response.result);
             })
             .catch((error) => {
                 reject(error);
@@ -201,10 +211,10 @@ export const updateStockWarningInfo = (params: StockWarningInfo[]) => {
         axios.post('/itemManage/updateStockWarningInfo', params)
             .then((response: any) => {
                 if (response.code !== 200) {
-                    message.info('保存失败');
+                    message.error('保存失败');
                     resolve({});
                 }
-                message.info('保存成功');
+                message.success('保存成功');
                 resolve({});
             })
             .catch((error: any) => {
@@ -223,10 +233,10 @@ export const delStockWarningInfo = (params: string[]) => {
         axios.post('/itemManage/delStockWarningInfo', params)
             .then((response: any) => {
                 if (response.code !== 200) {
-                    message.info('保存失败');
+                    message.error('保存失败');
                     resolve({});
                 }
-                message.info('保存成功');
+                message.success('保存成功');
                 resolve({});
             })
             .catch((error: any) => {
@@ -247,10 +257,11 @@ interface ExportItemParams {
  */
 export const exportItemData = (params: ExportItemParams) => {
     const { spuIds = [], thirdCategoryId, distributionState } = params;
+    // debugger
     // 拼接url
     const urlList = [];
     if (spuIds.length) {
-        const spuArr = spuIds.map(item => `spuIds[]=${item}`);
+        const spuArr = spuIds.map(item => `spuIds=${item}`);
         const spuStr = spuArr.join('&');
         urlList.push(spuStr);
     }

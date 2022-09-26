@@ -51,7 +51,6 @@ class HomePageSider extends React.Component<{pathname: string}, IState> {
         return (
             <div
                 style={{
-                    width: collapsed ? 80 : 256,
                     height: '100%',
                 }}
             >
@@ -63,6 +62,7 @@ class HomePageSider extends React.Component<{pathname: string}, IState> {
                     selectedKeys={[pathname]}
                     className="sider-menu"
                     onClick={this.clickSider}
+                    style={{ width: collapsed ? '80px' : '200px' }}
                 />
                 <Button
                     type="primary"

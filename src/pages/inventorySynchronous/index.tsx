@@ -1,6 +1,6 @@
 import React, { ChangeEvent } from 'react';
 import {
-    Alert, Button, Input, message, Modal, Tree
+    Alert, Button, Input, message, Modal, Spin, Tree
 } from 'antd';
 import { delStockWarningInfo, getBasicStockValue, getCategoryOptions, updateStockWarningInfo } from '../commodityManagement/api';
 import './index.scss';
@@ -35,6 +35,8 @@ interface IState {
     restoreValue: number | undefined;
     /** 将要删除名单 */
     willDeletedList: string[] | any;
+    /** 数据加载 */
+    spinning: boolean;
 }
 /** 检查input框回调 */
 interface CheckInput {
@@ -58,6 +60,7 @@ class InventorySynchronous extends React.Component<{}, IState> {
             restoreValue: undefined,
             inventoryCategoryData: [],
             willDeletedList: [],
+            spinning: true,
         };
     }
     async componentDidMount () {
@@ -76,7 +79,7 @@ class InventorySynchronous extends React.Component<{}, IState> {
         const { prewarningValue, restoreValue } = this.getBasicStockPreWarningInfo(data);
         // 展示特殊类目库存
         const inventoryCategoryData = data.filter((item: any) => item.cid != 0);
-        this.setState({ inventoryCategoryData, prewarningValue, restoreValue });
+        this.setState({ inventoryCategoryData, prewarningValue, restoreValue, spinning: false });
     }
     /**
      * 获取基础类目信息
@@ -99,8 +102,8 @@ class InventorySynchronous extends React.Component<{}, IState> {
      */
     handleOk = async () => {
         const { selectData = [], alertValue, upValue } = this.state;
-        if (!selectData.length || !alertValue.trim() || !upValue.trim()) return message.info('请输入完整');
-        if (!numberRegular.test(alertValue) || !numberRegular.test(upValue)) return message.info('输入框需要纯数字');
+        if (!selectData.length || !alertValue.trim() || !upValue.trim()) return message.warning('请输入完整');
+        if (!numberRegular.test(alertValue) || !numberRegular.test(upValue)) return message.warning('输入框需要纯数字');
         await updateStockWarningInfo(selectData);
         this.init();
         this.setState({ isModalOpen: false, selectData: [],  alertValue: '', upValue: '', checkedKeys: [] });
@@ -280,6 +283,7 @@ class InventorySynchronous extends React.Component<{}, IState> {
                                 <Input onChange={this.changeItemInput.bind(this, 'restoreValue', item.cid)}  value={item.restoreValue}></Input>
                             </span>
                             <span
+                                className='del-btn'
                                 onClick={this.deltargetKeysItem.bind(
                                     this,
                                     item.cid
@@ -351,7 +355,8 @@ class InventorySynchronous extends React.Component<{}, IState> {
                             title: 'categoryName',
                             key: 'categoryId',
                         }}
-                        onCheck={() => this.onCheck}
+                        // @ts-ignore
+                        onCheck={this.onCheck}
                         treeData={treeData}
                         checkedKeys={checkedKeys}
                     />
@@ -395,75 +400,77 @@ class InventorySynchronous extends React.Component<{}, IState> {
         this.setState(updateInfo);
     }
     render () {
-        const { isModalOpen, checkSpecialStockDialogVisible, prewarningValue, restoreValue, inventoryCategoryData } =
+        const { isModalOpen, checkSpecialStockDialogVisible, prewarningValue, restoreValue, inventoryCategoryData, spinning } =
             this.state;
         return (
             <div className="inventory-synchronous">
-                <Alert message={ALERT_MSG} />
-                <div>
-                    <h3>基础库存同步</h3>
+                <Spin spinning={spinning}>
+                    <Alert message={ALERT_MSG} />
                     <div>
-                        <div className="basis-ipt">
-                            <span>预警值：</span>
-                            <Input value={prewarningValue} onChange={this.changeBasicStockValue.bind(this, 'prewarningValue')} placeholder="请输入预警值" />
-                        </div>
-                        <div className="basis-ipt">
-                            <span>上升阔值：</span>
-                            <Input value={restoreValue}  onChange={this.changeBasicStockValue.bind(this, 'restoreValue')}  placeholder="请输入上升阔值" />
-                        </div>
-                    </div>
-                </div>
-                <div className="special-category">
-                    <h3>特殊库存同步</h3>
-                    <div className="info">
-                        預警/上升岡值：
-                        <span
-                            className="operation-btn"
-                            onClick={this.categorySettings}
-                        >
-                            请选择类目设置
-                        </span>
-                    </div>
-                    {inventoryCategoryData.length > 0 ? (
+                        <h3>基础库存同步</h3>
                         <div>
-                            已设置<span>{inventoryCategoryData.length}</span>
-                            个类目特殊库存同步
+                            <div className="basis-ipt">
+                                <span>预警值：</span>
+                                <Input value={prewarningValue} onChange={this.changeBasicStockValue.bind(this, 'prewarningValue')} placeholder="请输入预警值" />
+                            </div>
+                            <div className="basis-ipt">
+                                <span>上升阔值：</span>
+                                <Input value={restoreValue}  onChange={this.changeBasicStockValue.bind(this, 'restoreValue')}  placeholder="请输入上升阔值" />
+                            </div>
+                        </div>
+                    </div>
+                    <div className="special-category">
+                        <h3>特殊库存同步</h3>
+                        <div className="info">
+                            預警/上升岡值：
                             <span
                                 className="operation-btn"
-                                onClick={this.clickCheckSpecialStockDialogVisible.bind(
-                                    this,
-                                    true
-                                )}
+                                onClick={this.categorySettings}
                             >
-                                查看详情
+                                请选择类目设置
                             </span>
                         </div>
-                    ) : null}
-                </div>
-                <div className="save-btn">
-                    <Button type="primary" onClick={this.saveSte}>保存设置</Button>
-                </div>
-                <Modal
-                    open={isModalOpen}
-                    footer={this.dialogFooterRender()}
-                    closable={false}
-                    width={800}
-                >
-                    {this.treeTransferRender()}
-                </Modal>
-                <Modal
-                    title="已设置特殊库存同步"
-                    open={checkSpecialStockDialogVisible}
-                    onCancel={this.clickCheckSpecialStockDialogVisible.bind(
-                        this,
-                        false
-                    )}
-                    footer={this.checkSpecialStockDialogFooterRender()}
-                    width={800}
-                    className="check-special-stock-dialog"
-                >
-                    {this.checkSpecialStockDialogBodyRender()}
-                </Modal>
+                        {inventoryCategoryData.length > 0 ? (
+                            <div>
+                                已设置<span>{inventoryCategoryData.length}</span>
+                                个类目特殊库存同步
+                                <span
+                                    className="operation-btn"
+                                    onClick={this.clickCheckSpecialStockDialogVisible.bind(
+                                        this,
+                                        true
+                                    )}
+                                >
+                                    查看详情
+                                </span>
+                            </div>
+                        ) : null}
+                    </div>
+                    <div className="save-btn">
+                        <Button type="primary" onClick={this.saveSte}>保存设置</Button>
+                    </div>
+                    <Modal
+                        open={isModalOpen}
+                        footer={this.dialogFooterRender()}
+                        closable={false}
+                        width={800}
+                    >
+                        {this.treeTransferRender()}
+                    </Modal>
+                    <Modal
+                        title="已设置特殊库存同步"
+                        open={checkSpecialStockDialogVisible}
+                        onCancel={this.closeModifySpecialStock.bind(
+                            this,
+                            false
+                        )}
+                        footer={this.checkSpecialStockDialogFooterRender()}
+                        width={800}
+                        className="check-special-stock-dialog"
+                    >
+                        {this.checkSpecialStockDialogBodyRender()}
+                    </Modal>
+                </Spin>
             </div>
         );
     }

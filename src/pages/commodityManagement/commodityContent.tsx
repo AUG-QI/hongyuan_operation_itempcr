@@ -24,6 +24,8 @@ interface IProps {
     searchData: any;
     /** 商品管理加载效果 */
     shopManagementLoading: boolean;
+    /** 是否刷新 */
+    isRefresh: boolean;
 }
 
 interface IState {
@@ -103,14 +105,14 @@ class CommodityContent extends React.Component<IProps, IState> {
         if (type === 'exportItemsAll') {
             const { total } = this.props;
             if (total < 1) {
-                return message.info('暂无数据导出');
+                return message.warning('暂无数据导出');
             }
             this.handelExportItems();
         } else if (type === 'exportItemSelected') {
             // 导出选中
             const { rowSelection } = this.state;
             if (!rowSelection.selectedRowKeys.length) {
-                return message.info('请先勾选商品');
+                return message.warning('请先勾选商品');
             }
             this.handelExportItems(rowSelection.selectedRowKeys);
         }
@@ -148,7 +150,7 @@ class CommodityContent extends React.Component<IProps, IState> {
             {
                 title: '商品信息',
                 dataIndex: 'productName',
-                width: 400,
+                width: 300,
                 key: 'productName',
                 render: (name: any, record: any) => (
                     <Space size="middle">
@@ -180,11 +182,13 @@ class CommodityContent extends React.Component<IProps, IState> {
                 title: '类目',
                 dataIndex: 'categoryInfo',
                 key: 'categoryInfo',
+                align: 'center',
             },
             {
                 title: '渠道',
                 dataIndex: 'distributionState',
                 key: 'distributionState',
+                align: 'center',
                 render: (name: any, record: any) => (
                     <Space size="middle">
                         <div className="distribution-state">
@@ -204,6 +208,7 @@ class CommodityContent extends React.Component<IProps, IState> {
             },
             {
                 title: '操作',
+                align: 'center',
                 dataIndex: 'operation',
                 render: (name: any, record: any) => (
                     <Space size="middle">

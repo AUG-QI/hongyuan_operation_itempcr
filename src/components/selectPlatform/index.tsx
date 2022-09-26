@@ -19,7 +19,10 @@ export const PLATFORM_IMG: any = {
     shipinhaoGray: '',
 
 };
-
+export const IMG_NAME:any = {
+    'dy': 'doudian',
+    'yz': 'youzan',
+};
 /**
  * 下拉选择项
  */

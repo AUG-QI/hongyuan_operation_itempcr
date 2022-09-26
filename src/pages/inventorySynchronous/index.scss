@@ -31,6 +31,7 @@
         display: flex;
         margin-top: 20px;
         text-align: right;
+        color: #797979;
         span {
             width: 100px;
             line-height: 40px;
@@ -94,7 +95,7 @@
 .special-stock-title {
     display: flex;
     border: 1px solid #eee;
-    padding: 10px;
+    padding: 10px 20px;
     margin-top: -1px;
     span:first-child {
         flex: 2;
@@ -105,11 +106,12 @@
     span:nth-child(3) {
         flex: 1;
     }
+    .del-btn {
+        color: #8b939c;
+        cursor: pointer;
+    }
     input {
         width: 80px;
-    }
-    span:nth-child(4) {
-        cursor: pointer;
     }
 }
 .stock-bg {

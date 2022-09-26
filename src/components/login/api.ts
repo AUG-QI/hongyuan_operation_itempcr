@@ -17,7 +17,7 @@ export const passwordlogin = (params: PassWordLoginParams) => {
         axios.post('/user/login', {
             account: params.username,
             password: params.password,
-        }, { withCredentials: false })
+        })
             .then((response: any) => {
                 if (response.code === 200) {
                     resolve(response.data);

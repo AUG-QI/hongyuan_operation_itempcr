@@ -1,9 +1,10 @@
 import { message, Space, Table } from 'antd';
 import { TableRowSelection } from 'antd/lib/table/interface';
 import React, { ChangeEvent } from 'react';
+import { Link } from 'react-router-dom';
 import FooterPage from '../../components/footerPage';
 import SearchInput from '../../components/searchInput';
-import SelectPlatform from '../../components/selectPlatform';
+import SelectPlatform, { IMG_NAME, PLATFORM_IMG } from '../../components/selectPlatform';
 import { isEmpty, transformationObject, UrlData } from '../../services/utils';
 import { deleteRelation, reqSearchCommodity, reqSearchDistributorList } from './api';
 import { ItemsTableList } from './commodityContent';
@@ -118,7 +119,7 @@ class ShopManagement extends React.Component<IProps, IState> {
                 render: (name: any, record: any) => (
                     <Space size="middle">
                         <div className='name-icon'>
-                            <img src={record.url} alt="" />
+                            <img src={PLATFORM_IMG[IMG_NAME[record.shop_type]]} alt="" />
                         </div>
                     </Space>
                 ),
@@ -126,10 +127,12 @@ class ShopManagement extends React.Component<IProps, IState> {
             {
                 title: '分销商ID',
                 dataIndex: 'user_id',
+                align: 'center',
             },
             {
                 title: '分销商名称',
                 dataIndex: 'user_name',
+                align: 'center',
             },
             {
                 title: '店名',
@@ -138,6 +141,7 @@ class ShopManagement extends React.Component<IProps, IState> {
             {
                 title: '操作',
                 dataIndex: 'address',
+                align: 'center',
                 render: (name: any, record: any) => (
                     <Space size="middle">
                         <a onClick={this.shelvesSuppliers.bind(this, record)}>下架</a>
@@ -155,12 +159,12 @@ class ShopManagement extends React.Component<IProps, IState> {
             num_iid,
             origin_num_iid,
         };
-        const res = await deleteRelation(data);
-        if (res !== 'success') {
-            message.info('下架失败');
+        const res: any = await deleteRelation(data);
+        if (!res.is_success) {
+            message.error(res.error_msg);
             return;
         }
-        message.info('下架失败');
+        message.success('下架成功');
     }
     /**
      * 改变表格状态
@@ -210,23 +214,31 @@ class ShopManagement extends React.Component<IProps, IState> {
      * 处理批量下架
      * @param val
      */
-    handelOperationBtn = (val: string) => {
+    handelOperationBtn = async (val: string) => {
+        const { deleteList } = this.state;
+        if (!deleteList.length) {
+            message.warning('请先选择平台');
+            return;
+        }
         if (val === 'takenDown') {
-            // 拿到值
-            const { deleteList } = this.state;
             let successNum = 0;
             let errorNum = 0;
-
-            deleteList.forEach(async (item) => {
-                await deleteRelation(item).then(() => {
-                    successNum += 1;
-                })
-                    .catch(() => {
-                        errorNum += 1;
+            // 请求大集合
+            const allRequests = [];
+            deleteList.forEach((item) => {
+                allRequests.push(new Promise(resolve => {
+                    deleteRelation(item).then(res => {
+                        if (res.code !== 200) {
+                            errorNum += 1;
+                        } else {
+                            successNum += 1;
+                        }
+                        resolve(res);
                     });
+                }));
             });
-            const messageInfo = (successNum && errorNum) ? `成功${successNum}笔，失败${errorNum}笔` : (successNum ? '下架成功' : '下架失败');
-            message.info(messageInfo);
+            const updateRes = await Promise.all(allRequests);
+            console.log(updateRes);
         }
     };
     /**
@@ -254,13 +266,13 @@ class ShopManagement extends React.Component<IProps, IState> {
      * 返回上一页
      */
     rollback = () => {
-        window.location.href = document.referrer;
+        document.parentWindow.location.reload();
     };
     /**
      * 处理搜索
      */
     hadleAllSearch = async () => {
-        const { secarchInfo, titleData } = this.state;
+        const { secarchInfo, titleData, rowSelection } = this.state;
         const secarchData: any = {
             origin_num_iid: secarchInfo.originNumId,
             page_no: secarchInfo.pageNo,
@@ -271,7 +283,7 @@ class ShopManagement extends React.Component<IProps, IState> {
         }
         const { items = [], total_amount = 0 } = await reqSearchDistributorList(secarchData);
         titleData.distributionNum = total_amount;
-        this.setState({ itemTableList: items });
+        this.setState({ itemTableList: items, isAllValue: false, rowSelection: { ...rowSelection, selectedRowKeys: [] } });
     }
     render (): React.ReactNode {
         const { rowSelection, isAllValue, itemTableList, titleData } = this.state;
@@ -289,9 +301,9 @@ class ShopManagement extends React.Component<IProps, IState> {
                 <div>
                     <div className="shop-management-content">
                         <div className="suppliers-title">
-                            <div className="suppliers-btn" onClick={this.rollback}>
+                            <Link to={'/commodityManagement'} className="suppliers-btn">
                                 {'< 商品管理'}
-                            </div>
+                            </Link>
                             <div className="suppliers-input">
                                 <SelectPlatform
                                     handleSelectChange={this.handleSelectChange}
@@ -312,6 +324,7 @@ class ShopManagement extends React.Component<IProps, IState> {
                                 scroll={{
                                     y: 500,
                                 }}
+                                align='center'
                                 rowKey='origin_num_iid'
                             />
                         </div>

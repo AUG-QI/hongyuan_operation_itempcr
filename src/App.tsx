@@ -10,7 +10,12 @@ import './App.css';
 /** 入口页面 */
 function App () {
     useEffect(() => {
-        if (location.href.includes('/login')) {
+        const userInfo = sessionStorage.getItem('userInfo');
+        if (location.href.includes('/login') && !userInfo) {
+            location.hash = '/login';
+            return;
+        }
+        if (!userInfo) {
             location.hash = '/login';
             return;
         }

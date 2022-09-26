@@ -1,4 +1,4 @@
-
+// @ts-ignore
 import React from 'react';
 import { Cascader } from 'antd';
 import CommodityContent, { ItemsTableList } from './commodityContent';
@@ -23,6 +23,10 @@ interface IState {
     categoryInfo: string;
     /** 商品页面加载 */
     shopManagementLoading: boolean;
+    /** 是否刷新 */
+    isRefresh: boolean;
+    /** 页面展示 */
+    pageFrom: string;
 }
 
 /** 类目选择项 */
@@ -69,6 +73,7 @@ class CommodityManagement extends React.Component<IProps, IState>  {
             },
             categoryInfo: '',
             shopManagementLoading: true,
+            isRefresh: false,
         };
     }
     componentDidMount (): void {
@@ -83,7 +88,7 @@ class CommodityManagement extends React.Component<IProps, IState>  {
         // 获取类目数据
         const categoryoptions: any = await getCategoryOptions();
         if (!categoryoptions.length) {
-            this.setState({  shopManagementLoading: false  });
+            this.setState({ shopManagementLoading: false });
             return;
         }
         // 设置默认数据 - 第一条数据
@@ -191,7 +196,10 @@ class CommodityManagement extends React.Component<IProps, IState>  {
      * @returns
      */
     handleSearch = async () => {
-        const { searchData } = this.state;
+        const { searchData, shopManagementLoading } = this.state;
+        if (!shopManagementLoading) {
+            this.setState({ shopManagementLoading: true });
+        }
         const reqData: any = {
             thirdCategoryId: searchData.category[searchData.category.length - 1] || 0,
             pageNo: searchData.pageNo,
@@ -203,13 +211,10 @@ class CommodityManagement extends React.Component<IProps, IState>  {
         if (searchData.productName) {
             reqData.productName = searchData.productName;
         }
-        if (searchData.distributionState[0] !== 'all') {
-            reqData.distributionState = searchData.distributionState;
-        }
         const { list, total } = await reqSearchCommodity(reqData);
         // 整理成能传入tablelist的文件 itemTableList
         const itemTableList = this.handleItemTableList(list);
-        this.setState({ itemTableList, total, shopManagementLoading: false });
+        this.setState({ itemTableList, total, shopManagementLoading: false, isRefresh: true });
     }
 
     /**
@@ -228,24 +233,29 @@ class CommodityManagement extends React.Component<IProps, IState>  {
         return tableData;
     }
     render () {
-        const { categoryoptions, itemTableList, searchData, total, shopManagementLoading  } = this.state;
-        return <div className='commodity-management'>
-            <div className="commodity-management-title location">
-                <Cascader
-                    value={searchData.category}
-                    options={categoryoptions}
-                    onChange={() => this.handleCategoryChange}
-                    allowClear={false}
-                    style={{ width: 324 }}
-                    fieldNames={{ label: 'categoryName', value: 'categoryId' }}/>
-                <div className="title-input">
-                    <SelectPlatform handleSelectChange={this.handlePlatformChange}></SelectPlatform>
-                    <SearchInput from='productList' handleInputSearch={this.handleInputSearch}/>
+        const { categoryoptions, itemTableList, searchData, total, shopManagementLoading, isRefresh  } = this.state;
+        return <div>
+            {
+                <div className='commodity-management'>
+                    <div className="commodity-management-title location">
+                        <Cascader
+                            value={searchData.category}
+                            options={categoryoptions}
+                            // @ts-ignore
+                            onChange={this.handleCategoryChange}
+                            allowClear={false}
+                            style={{ width: 324 }}
+                            fieldNames={{ label: 'categoryName', value: 'categoryId' }}/>
+                        <div className="title-input">
+                            <SelectPlatform handleSelectChange={this.handlePlatformChange}></SelectPlatform>
+                            <SearchInput from='productList' handleInputSearch={this.handleInputSearch}/>
+                        </div>
+                    </div>
+                    <div className="commodity-management-content">
+                        <CommodityContent itemTableList={itemTableList} total = {total} changePageSize={this.handleChangePageSize} searchData={searchData}  shopManagementLoading={shopManagementLoading} isRefresh={isRefresh}></CommodityContent>
+                    </div>
                 </div>
-            </div>
-            <div className="commodity-management-content">
-                <CommodityContent itemTableList={itemTableList} total = {total} changePageSize={this.handleChangePageSize} searchData={searchData}  shopManagementLoading={shopManagementLoading}></CommodityContent>
-            </div>
+            }
         </div>;
     }
 }

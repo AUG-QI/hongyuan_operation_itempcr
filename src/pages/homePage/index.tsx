@@ -2,19 +2,28 @@ import { Layout } from 'antd';
 import HomePageHeader from './homePageHeader';
 import HomePageSider from './homePageSider';
 import HomePageContent from './homePageContent';
-import { useLocation } from 'react-router-dom';
+import { Navigate, useLocation } from 'react-router-dom';
 /** 主页面 */
 const HomePage = () => {
     const location = useLocation();
+    const userInfo = sessionStorage.getItem('userInfo');
     return (
-        <Layout className='home-page'>
-            <HomePageHeader></HomePageHeader>
-            <Layout hasSider>
-                <HomePageSider pathname={location.pathname}></HomePageSider>
-                <HomePageContent></HomePageContent>
-            </Layout>
-        </Layout>
+        <>
+            {userInfo ? <Layout className='home-page'>
+                <HomePageHeader></HomePageHeader>
+                <Layout hasSider>
+                    <HomePageSider pathname={location.pathname}></HomePageSider>
+                    <HomePageContent></HomePageContent>
+                </Layout>
+            </Layout> : <Navigate
+                replace={true}
+                to="/login"
+                state={{ from: `${location.pathname}${location.search}` }}
+            />
+            }
+        </>
+
     );
-}
+};
 
 export default HomePage;

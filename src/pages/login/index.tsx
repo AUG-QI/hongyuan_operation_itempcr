@@ -1,6 +1,6 @@
 import { useNavigate } from 'react-router-dom';
 import LoginBlock from '../../components/login/loginBlock';
-import { setUserInfo } from '../../services/UserService';
+import { getUserData } from '../../services/UserService';
 import './index.scss';
 
 /** 登陆页面 */
@@ -8,8 +8,8 @@ const LoginPage = () => {
     const navigate = useNavigate();
     /** 登陆成功 */
     const onLoginSuccessed = async (res: any) => {
-        setUserInfo(res);
-        navigate('/');
+        await getUserData();
+        navigate('/commodityManagement');
     };
 
     return (

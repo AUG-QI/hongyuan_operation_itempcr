@@ -10,6 +10,7 @@ export interface UserInfo {
  * @param res
  */
 export const setUserInfo = (res: any) => {
+    sessionStorage.setItem('userInfo', JSON.stringify(res));
     window.userInfo = res;
 };
 
@@ -36,11 +37,16 @@ export const fetchUserInfo = (): Promise<Partial<UserInfo>> => {
  * 获取用户信息
  */
 export const getUserData = async () => {
-    if (!window.userInfo?.nick) {
-        const userInfo: any = await fetchUserInfo();
-        if (!userInfo.nick) {
+    const userInfoJson: any = sessionStorage.getItem('userInfo') || null;
+    let userInfo: any = {};
+    if (userInfoJson) {
+        userInfo = JSON.parse(userInfoJson);
+    }
+    if (!userInfo?.nick) {
+        const resUserInfo: any = await fetchUserInfo();
+        if (!resUserInfo.nick) {
             location.hash = '/login';
         }
-        await setUserInfo(userInfo);
+        await setUserInfo(resUserInfo);
     }
 };
