@@ -20,6 +20,8 @@ interface IProps {
     total: number | any;
     /** 选中数量 */
     selectNum: number | any;
+    /** 当前页 */
+    pageNo: number;
 }
 interface IState {
     /** 每页条数 */
@@ -28,8 +30,6 @@ interface IState {
     exportOptionsVisble: boolean;
     /** 上传文件弹框 */
     uploadFileDialogVisible: boolean;
-    /** 当前页 */
-    current: number;
 }
 /** 翻页器组建 */
 class FooterPage extends React.Component<IProps, IState>  {
@@ -39,7 +39,6 @@ class FooterPage extends React.Component<IProps, IState>  {
             pageSize: 20,
             exportOptionsVisble: false,
             uploadFileDialogVisible: false,
-            current: 1,
         };
     }
     componentDidMount (): void {
@@ -62,7 +61,6 @@ class FooterPage extends React.Component<IProps, IState>  {
      * @returns
      */
     changePageSize = (val: number) => {
-        this.setState({ current: val });
         const { changePageSize } = this.props;
         changePageSize(val);
     }
@@ -133,8 +131,8 @@ class FooterPage extends React.Component<IProps, IState>  {
     }
 
     render () {
-        const { from, isAllValue, handelOperationBtn, total, selectNum } = this.props;
-        const { pageSize, exportOptionsVisble, uploadFileDialogVisible, current } = this.state;
+        const { from, isAllValue, handelOperationBtn, total, selectNum,  pageNo } = this.props;
+        const { pageSize, exportOptionsVisble, uploadFileDialogVisible } = this.state;
         return (
             <div className="footer-page">
                 <div className="operation-btns">
@@ -177,7 +175,7 @@ class FooterPage extends React.Component<IProps, IState>  {
                     pageSize={pageSize}
                     onChange={this.changePageSize}
                     showSizeChanger={false}
-                    current={current}
+                    current={pageNo}
                 />
                 <Modal title="导入商品信息" open={uploadFileDialogVisible} onCancel={this.closeUploadInfoDialog} footer={null} className='upload-info-dialog'>
                     <div className='ant-upload ant-upload-drag' onClick={this.updateFile} >

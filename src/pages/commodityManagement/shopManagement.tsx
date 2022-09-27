@@ -10,9 +10,6 @@ import { deleteRelation, reqSearchCommodity, reqSearchDistributorList } from './
 import { ItemsTableList } from './commodityContent';
 
 interface IProps {
-
-    /** 商品信息 */
-    // itemData: ItemData;
 }
 
 /** 搜索值 */
@@ -165,6 +162,7 @@ class ShopManagement extends React.Component<IProps, IState> {
             return;
         }
         message.success('下架成功');
+        this.hadleAllSearch();
     }
     /**
      * 改变表格状态
@@ -209,7 +207,14 @@ class ShopManagement extends React.Component<IProps, IState> {
             this.hadleAllSearch();
         });
     };
-
+    /**
+     * 修改input框状态
+     */
+    handleChangeInputVal = (val: string) => {
+        const { secarchInfo } = this.state;
+        secarchInfo.keyWord = val;
+        this.setState({ secarchInfo });
+    }
     /**
      * 处理批量下架
      * @param val
@@ -224,7 +229,7 @@ class ShopManagement extends React.Component<IProps, IState> {
             let successNum = 0;
             let errorNum = 0;
             // 请求大集合
-            const allRequests = [];
+            const allRequests: any = [];
             deleteList.forEach((item) => {
                 allRequests.push(new Promise(resolve => {
                     deleteRelation(item).then(res => {
@@ -238,7 +243,13 @@ class ShopManagement extends React.Component<IProps, IState> {
                 }));
             });
             const updateRes = await Promise.all(allRequests);
-            console.log(updateRes);
+            const isSuccess = updateRes.every(item => item.is_success);
+            if (isSuccess) {
+                message.success('下架成功');
+            } else {
+                message.error('下架失败');
+            }
+            this.hadleAllSearch();
         }
     };
     /**
@@ -286,7 +297,7 @@ class ShopManagement extends React.Component<IProps, IState> {
         this.setState({ itemTableList: items, isAllValue: false, rowSelection: { ...rowSelection, selectedRowKeys: [] } });
     }
     render (): React.ReactNode {
-        const { rowSelection, isAllValue, itemTableList, titleData } = this.state;
+        const { rowSelection, isAllValue, itemTableList, titleData, secarchInfo } = this.state;
         return (
             <div className="shop-management">
                 <div className="shop-management-title commodity-location">
@@ -308,10 +319,13 @@ class ShopManagement extends React.Component<IProps, IState> {
                                 <SelectPlatform
                                     handleSelectChange={this.handleSelectChange}
                                     from='distributors'
+                                    distributionState={secarchInfo.shopType}
                                 ></SelectPlatform>
                                 <SearchInput
                                     handleInputSearch={this.handleInputSearch}
                                     from="distributors"
+                                    inputVal={secarchInfo.keyWord}
+                                    handleChangeInputVal={this.handleChangeInputVal}
                                 ></SearchInput>
                             </div>
                         </div>
@@ -337,6 +351,7 @@ class ShopManagement extends React.Component<IProps, IState> {
                         from="distributors"
                         total={titleData.distributionNum}
                         selectNum={rowSelection.selectedRowKeys.length}
+                        pageNo={secarchInfo.pageNo}
                     ></FooterPage>
                 </div>
             </div>

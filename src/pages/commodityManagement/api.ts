@@ -211,11 +211,9 @@ export const updateStockWarningInfo = (params: StockWarningInfo[]) => {
         axios.post('/itemManage/updateStockWarningInfo', params)
             .then((response: any) => {
                 if (response.code !== 200) {
-                    message.error('保存失败');
-                    resolve({});
+                    resolve('error');
                 }
-                message.success('保存成功');
-                resolve({});
+                resolve('success');
             })
             .catch((error: any) => {
                 reject(error);
@@ -228,16 +226,14 @@ export const updateStockWarningInfo = (params: StockWarningInfo[]) => {
  * @param params
  * @returns
  */
-export const delStockWarningInfo = (params: string[]) => {
+export const delStockWarningInfo = (params: string) => {
     return new Promise((resolve, reject) => {
         axios.post('/itemManage/delStockWarningInfo', params)
             .then((response: any) => {
                 if (response.code !== 200) {
-                    message.error('保存失败');
-                    resolve({});
+                    resolve('error');
                 }
-                message.success('保存成功');
-                resolve({});
+                resolve('success');
             })
             .catch((error: any) => {
                 reject(error);
@@ -257,7 +253,6 @@ interface ExportItemParams {
  */
 export const exportItemData = (params: ExportItemParams) => {
     const { spuIds = [], thirdCategoryId, distributionState } = params;
-    // debugger
     // 拼接url
     const urlList = [];
     if (spuIds.length) {
@@ -273,5 +268,6 @@ export const exportItemData = (params: ExportItemParams) => {
     }
     const urlData = urlList.join('&');
     window.open(`${config.BASE_URL}/itemManage/exportItemData?${urlData}`);
+    return 'success';
 };
 

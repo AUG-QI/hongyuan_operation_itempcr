@@ -1,12 +1,13 @@
-// @ts-ignore
-import React from 'react';
-import { Cascader } from 'antd';
-import CommodityContent, { ItemsTableList } from './commodityContent';
-import SelectPlatform from '../../components/selectPlatform';
+import React, { ChangeEvent } from 'react';
+import { Cascader, message, Space, Table } from 'antd';
+import  { ItemsTableList } from './commodityContent';
+import SelectPlatform, { PLATFORM_IMG } from '../../components/selectPlatform';
 import SearchInput from '../../components/searchInput';
 import './index.scss';
-import { getCategoryOptions, reqSearchCommodity } from './api';
+import { exportItemData, getCategoryOptions, reqSearchCommodity } from './api';
 import { numberRegular } from '../inventorySynchronous';
+import FooterPage from '../../components/footerPage';
+import { NavLink } from 'react-router-dom';
 
 interface IProps {
 }
@@ -23,10 +24,10 @@ interface IState {
     categoryInfo: string;
     /** 商品页面加载 */
     shopManagementLoading: boolean;
-    /** 是否刷新 */
-    isRefresh: boolean;
-    /** 页面展示 */
-    pageFrom: string;
+    /** rowSelection */
+    rowSelection: any;
+    /** 是否全选 */
+    isAllValue: boolean;
 }
 
 /** 类目选择项 */
@@ -73,11 +74,24 @@ class CommodityManagement extends React.Component<IProps, IState>  {
             },
             categoryInfo: '',
             shopManagementLoading: true,
-            isRefresh: false,
+            rowSelection: {
+                onChange: this.changeTableSelectedState,
+                selectedRowKeys: [], // 选中的值
+                hideSelectAll: true,
+            },
+            isAllValue: false,
         };
     }
-    componentDidMount (): void {
-        // 初始化数据
+    async componentDidMount () {
+        const searchDataJson = sessionStorage.getItem('commoditySearchData');
+        if (searchDataJson) {
+            const categoryoptions: any = await getCategoryOptions();
+            const searchData = JSON.parse(searchDataJson);
+            this.setState({ searchData, categoryInfo: searchData.categoryInfo, categoryoptions }, () => {
+                this.handleSearch();
+            });
+            return;
+        }
         this.initData();
     }
     /**
@@ -101,7 +115,101 @@ class CommodityManagement extends React.Component<IProps, IState>  {
             this.handleSearch();
         });
     }
+    /**
+     * 获取表头
+     * @returns
+     */
+    getColumns = () => {
+        return [
+            {
+                title: '商品信息',
+                dataIndex: 'productName',
+                width: 300,
+                key: 'productName',
+                render: (name: any, record: any) => (
+                    <Space size="middle">
+                        <div className="productInfo">
+                            <div className="productInfo-img">
+                                <img
+                                    src={record.portalSquareImgUrl}
+                                    alt=""
+                                    onError={(event: ChangeEvent<any>) => {
+                                        event.target.onerror = null;
+                                        event.target.src =
+                                            'https://q.aiyongtech.com/biyao/imgs/error_img.jpeg';
+                                    }}
+                                />
+                            </div>
+                            <div>
+                                <div className="productInfo-name">
+                                    {record.productName}
+                                </div>
+                                <div className="productInfo-id">
+                                    ID:{record.spuId}
+                                </div>
+                            </div>
+                        </div>
+                    </Space>
+                ),
+            },
+            {
+                title: '类目',
+                dataIndex: 'categoryInfo',
+                key: 'categoryInfo',
+                align: 'center',
+            },
+            {
+                title: '渠道',
+                dataIndex: 'distributionState',
+                key: 'distributionState',
+                align: 'center',
+                render: (name: any, record: any) => (
+                    <Space size="middle">
+                        <div className="distribution-state">
+                            {record.doudianDistributionState === 1 ? (
+                                <img src={PLATFORM_IMG['doudian']} alt="" />
+                            ) : (
+                                <img src={PLATFORM_IMG['doudianGray']} alt="" />
+                            )}
+                            {record.youzanDistributionState === 1 ? (
+                                <img src={PLATFORM_IMG['youzan']} alt="" />
+                            ) : (
+                                <img src={PLATFORM_IMG['youzanGray']} alt="" />
+                            )}
+                        </div>
+                    </Space>
+                ),
+            },
+            {
+                title: '操作',
+                align: 'center',
+                dataIndex: 'operation',
+                render: (name: any, record: any) => (
+                    <Space size="middle">
+                        <NavLink
+                            to={{ pathname: `/commodityManagement/list?id=${record.spuId}` }}
+                        >
+                            已铺货店铺管理
+                        </NavLink>
+                    </Space>
+                ),
+            },
+        ];
+    };
 
+    /**
+     * 改变表格选中状态
+     * @param val
+     */
+    changeTableSelectedState = (val: string[]) => {
+        const { rowSelection, itemTableList } = this.state;
+        rowSelection.selectedRowKeys = val;
+        if (val.length !== itemTableList.length) {
+            this.setState({ isAllValue: false });
+        } else {
+            this.setState({ isAllValue: true });
+        }
+    };
     /**
      * 获取第一个类目数据
      * @param categoryoptions
@@ -153,12 +261,7 @@ class CommodityManagement extends React.Component<IProps, IState>  {
      */
     handlePlatformChange = (val : string[]) => {
         const { searchData } = this.state;
-        // 处理选择所有平台的情况
-        if (val.length === 1 && val[0] === 'all') {
-            delete searchData.distributionState;
-        } else {
-            searchData.distributionState = val;
-        }
+        searchData.distributionState = val;
         this.setState({ searchData }, () => {
             this.handleSearch();
         });
@@ -170,22 +273,26 @@ class CommodityManagement extends React.Component<IProps, IState>  {
      */
     handleInputSearch = (val: string) => {
         const { searchData } = this.state;
-        // 判断是什么类型搜索
-        if (numberRegular.test(val)) {
-            searchData.spuId = val;
-        } else {
-            searchData.productName = val;
-        }
+        searchData.inputVal = val;
         this.setState({ searchData }, () => {
             this.handleSearch();
         });
+    }
+    /**
+     * 处理改变input输入
+     * @param val
+     */
+    handleChangeInputVal = (val: string) => {
+        const { searchData } = this.state;
+        searchData.inputVal = val;
+        this.setState({ searchData });
     }
     /**
      * 改变页码选项
      */
     handleChangePageSize = (val: number) => {
         const { searchData } = this.state;
-        searchData.pageSize = val;
+        searchData.pageNo = val;
         this.setState({ searchData }, () => {
             this.handleSearch();
         });
@@ -196,7 +303,9 @@ class CommodityManagement extends React.Component<IProps, IState>  {
      * @returns
      */
     handleSearch = async () => {
-        const { searchData, shopManagementLoading } = this.state;
+        const { searchData, shopManagementLoading, categoryInfo, rowSelection  } = this.state;
+        // 保存一下搜索参数
+        sessionStorage.setItem('commoditySearchData', JSON.stringify({ ...searchData, categoryInfo }));
         if (!shopManagementLoading) {
             this.setState({ shopManagementLoading: true });
         }
@@ -205,16 +314,22 @@ class CommodityManagement extends React.Component<IProps, IState>  {
             pageNo: searchData.pageNo,
             pageSize: searchData.pageSize,
         };
-        if (searchData.spuId) {
-            reqData.spuId = searchData.spuId;
+        // 处理搜索数据
+        // 如果是所有平台就不用传了
+        if (searchData.distributionState[0] !== 'all') {
+            reqData.distributionState = searchData.distributionState;
         }
-        if (searchData.productName) {
-            reqData.productName = searchData.productName;
+        if (numberRegular.test(searchData.inputVal)) {
+            reqData.spuId = searchData.inputVal;
+        } else {
+            reqData.productName = searchData.inputVal;
         }
         const { list, total } = await reqSearchCommodity(reqData);
         // 整理成能传入tablelist的文件 itemTableList
         const itemTableList = this.handleItemTableList(list);
-        this.setState({ itemTableList, total, shopManagementLoading: false, isRefresh: true });
+        // 清空状态
+        rowSelection.selectedRowKeys = [];
+        this.setState({ itemTableList, total, shopManagementLoading: false, rowSelection, isAllValue: false });
     }
 
     /**
@@ -232,8 +347,71 @@ class CommodityManagement extends React.Component<IProps, IState>  {
         });
         return tableData;
     }
+    /**
+     * 全选
+     * @returns
+     */
+    handelSelectAll = (isAllValue: boolean) => {
+        const { rowSelection, itemTableList } = this.state;
+        if (!isAllValue) {
+            rowSelection.selectedRowKeys = [];
+        } else {
+            rowSelection.selectedRowKeys = itemTableList.map((item: any) => item.spuId);
+        }
+        this.setState({ isAllValue, rowSelection });
+    }
+
+    /**
+     * 处理导出按钮
+     * @param type 
+     * @returns 
+     */
+    handelOperationBtn = (type: string) => {
+        // 导出全部
+        if (type === 'exportItemsAll') {
+            const { total } = this.state;
+            if (total < 1) {
+                return message.warning('暂无数据导出');
+            }
+            this.handelExportItems();
+        } else if (type === 'exportItemSelected') {
+            // 导出选中
+            const { rowSelection } = this.state;
+            if (!rowSelection.selectedRowKeys.length) {
+                return message.warning('请先勾选商品');
+            }
+            this.handelExportItems(rowSelection.selectedRowKeys);
+        }
+    }
+
+    /**
+     * 开始处理选择的导出商品
+     */
+    handelExportItems = async (spuIdArr = []) => {
+        const { searchData } = this.state;
+        const thirdCategoryId =
+            searchData.category[searchData.category.length - 1];
+        // 部分导出或者直接是id搜索 直接传选择的+类目
+        if (spuIdArr.length || numberRegular.test(searchData.inputVal)) {
+            const spuIds = spuIdArr || [searchData.inputVal];
+            // 导出选中
+            await exportItemData({ spuIds, thirdCategoryId });
+        } else {
+            // 全部就需要传搜索条件
+            const data: any = {};
+            // 三级类目
+            data.thirdCategoryId = thirdCategoryId;
+            if (searchData.distributionState[0] !== 'all') {
+                data.distributionState = searchData.distributionState;
+            }
+            if (searchData.productName) {
+                data.distributionState = searchData.productName;
+            }
+            await exportItemData(data);
+        }
+    };
     render () {
-        const { categoryoptions, itemTableList, searchData, total, shopManagementLoading, isRefresh  } = this.state;
+        const { categoryoptions, itemTableList, searchData, total, shopManagementLoading, isAllValue, rowSelection  } = this.state;
         return <div>
             {
                 <div className='commodity-management'>
@@ -247,12 +425,34 @@ class CommodityManagement extends React.Component<IProps, IState>  {
                             style={{ width: 324 }}
                             fieldNames={{ label: 'categoryName', value: 'categoryId' }}/>
                         <div className="title-input">
-                            <SelectPlatform handleSelectChange={this.handlePlatformChange}></SelectPlatform>
-                            <SearchInput from='productList' handleInputSearch={this.handleInputSearch}/>
+                            <SelectPlatform handleSelectChange={this.handlePlatformChange} distributionState={searchData.distributionState}></SelectPlatform>
+                            <SearchInput from='productList' handleInputSearch={this.handleInputSearch} inputVal={searchData.inputVal} handleChangeInputVal={this.handleChangeInputVal}/>
                         </div>
                     </div>
                     <div className="commodity-management-content">
-                        <CommodityContent itemTableList={itemTableList} total = {total} changePageSize={this.handleChangePageSize} searchData={searchData}  shopManagementLoading={shopManagementLoading} isRefresh={isRefresh}></CommodityContent>
+                        <div className="shop-management">
+                            <Table
+                                columns={this.getColumns()}
+                                dataSource={itemTableList}
+                                pagination={false}
+                                rowSelection={rowSelection}
+                                scroll={{
+                                    y: 500,
+                                }}
+                                rowKey="spuId"
+                                loading={shopManagementLoading}
+                            />
+                            <FooterPage
+                                handelSelectAll={this.handelSelectAll}
+                                changePageSize={this.handleChangePageSize}
+                                handelOperationBtn={this.handelOperationBtn}
+                                pageNo = {searchData.pageNo}
+                                isAllValue={isAllValue}
+                                from="productList"
+                                total={total}
+                                selectNum={rowSelection.selectedRowKeys.length}
+                            ></FooterPage>
+                        </div>
                     </div>
                 </div>
             }

@@ -104,7 +104,12 @@ class InventorySynchronous extends React.Component<{}, IState> {
         const { selectData = [], alertValue, upValue } = this.state;
         if (!selectData.length || !alertValue.trim() || !upValue.trim()) return message.warning('请输入完整');
         if (!numberRegular.test(alertValue) || !numberRegular.test(upValue)) return message.warning('输入框需要纯数字');
-        await updateStockWarningInfo(selectData);
+        const res = await updateStockWarningInfo(selectData);
+        if (res == 'success') {
+            message.success('保存成功');
+        } else {
+            message.error('保存失败');
+        }
         this.init();
         this.setState({ isModalOpen: false, selectData: [],  alertValue: '', upValue: '', checkedKeys: [] });
     };
@@ -219,7 +224,12 @@ class InventorySynchronous extends React.Component<{}, IState> {
         const { willDeletedList } = this.state;
         // 如果有删除的就去删掉
         if (willDeletedList.length) {
-            await delStockWarningInfo(willDeletedList);
+            const res: any = await delStockWarningInfo(willDeletedList);
+            if (res == 'success') {
+                message.success('保存成功');
+            } else {
+                message.error('保存失败');
+            }
         }
         const { inventoryCategoryData } = this.state;
         await updateStockWarningInfo(inventoryCategoryData);
@@ -386,7 +396,12 @@ class InventorySynchronous extends React.Component<{}, IState> {
             restoreValue,
             name: '基础类目属性',
         }];
-        await updateStockWarningInfo(basicStock);
+        const res = await updateStockWarningInfo(basicStock);
+        if (res === 'success') {
+            message.success('保存成功');
+        } else {
+            message.error('保存失败');
+        }
         // 特殊类目保存
         this.setState({ checkSpecialStockDialogVisible: false, selectData: [], checkedKeys: [],  alertValue: '', upValue: '' });
     }
@@ -406,7 +421,7 @@ class InventorySynchronous extends React.Component<{}, IState> {
             <div className="inventory-synchronous">
                 <Spin spinning={spinning}>
                     <Alert message={ALERT_MSG} />
-                    <div>
+                    <>
                         <h3>基础库存同步</h3>
                         <div>
                             <div className="basis-ipt">
@@ -418,7 +433,7 @@ class InventorySynchronous extends React.Component<{}, IState> {
                                 <Input value={restoreValue}  onChange={this.changeBasicStockValue.bind(this, 'restoreValue')}  placeholder="请输入上升阔值" />
                             </div>
                         </div>
-                    </div>
+                    </>
                     <div className="special-category">
                         <h3>特殊库存同步</h3>
                         <div className="info">
@@ -446,9 +461,6 @@ class InventorySynchronous extends React.Component<{}, IState> {
                             </div>
                         ) : null}
                     </div>
-                    <div className="save-btn">
-                        <Button type="primary" onClick={this.saveSte}>保存设置</Button>
-                    </div>
                     <Modal
                         open={isModalOpen}
                         footer={this.dialogFooterRender()}
@@ -470,6 +482,9 @@ class InventorySynchronous extends React.Component<{}, IState> {
                     >
                         {this.checkSpecialStockDialogBodyRender()}
                     </Modal>
+                    <div className="save-btn">
+                        <Button type="primary" onClick={this.saveSte}>保存设置</Button>
+                    </div>
                 </Spin>
             </div>
         );

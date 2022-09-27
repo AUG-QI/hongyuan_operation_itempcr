@@ -39,6 +39,7 @@ class HomePageSider extends React.Component<{pathname: string}, IState> {
         });
     }
     clickSider = ({ key }: any): void => {
+        sessionStorage.removeItem('commoditySearchData');
         location.hash = `${key}`;
     }
     toggleCollapsed = () => {

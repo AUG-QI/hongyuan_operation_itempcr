@@ -62,11 +62,11 @@ interface IProps {
     handleSelectChange: Function;
     /** 来自 */
     from? :string;
+    /** 搜索平台 */
+    distributionState: any;
 }
 
 interface IState {
-    /** 选中的值 */
-    selectValues: string[];
     /** 选择方式 */
     selectMode: 'multiple' | 'tags' | any;
 }
@@ -75,10 +75,7 @@ interface IState {
 class SelectPlatform extends React.Component<IProps, IState> {
     constructor (props:IProps) {
         super(props);
-        this.state = {
-            selectValues: ['all'],
-            selectMode: 'multiple',
-        };
+        this.state = { selectMode: 'multiple' };
     }
     componentDidMount (): void {
         const { from = '' } = this.props;
@@ -90,33 +87,30 @@ class SelectPlatform extends React.Component<IProps, IState> {
      * 改变选择器框内容
      */
     onChange = (val: string[]) => {
-        const { handleSelectChange, from } = this.props;
-        const { selectValues } = this.state;
+        const { handleSelectChange, from, distributionState } = this.props;
         if (from === 'distributors') {
-            this.setState({ selectValues: val });
             handleSelectChange(val);
             return;
         }
         let newSelectValues = val;
         // 如果之前数据里面有选择全部，又选择其他的了，就删掉全部选项
-        if (selectValues.includes('all') && val.length) {
+        if (distributionState.includes('all') && val.length) {
             newSelectValues = val.filter(item => item !== 'all');
         } else if (val.includes('all') || !val.length) {
             // 如果是后来选中全部，就清空之前的
             newSelectValues = ['all'];
         }
-        this.setState({ selectValues: newSelectValues });
         handleSelectChange(newSelectValues);
     }
 
     render () {
-        const { from } = this.props;
-        const { selectValues, selectMode } = this.state;
+        const { from, distributionState } = this.props;
+        const { selectMode } = this.state;
         return (
             <Select
                 mode={selectMode}
                 optionLabelProp='label'
-                value={selectValues}
+                value={distributionState}
                 onChange={this.onChange}
                 maxTagCount='responsive'
                 style={{ width: 200 }}
