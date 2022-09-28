@@ -2,20 +2,25 @@ import { message, Space, Table } from 'antd';
 import { TableRowSelection } from 'antd/lib/table/interface';
 import React, { ChangeEvent } from 'react';
 import { Link } from 'react-router-dom';
+import { ItemsTableList } from './index';
 import FooterPage from '../../components/footerPage';
 import SearchInput from '../../components/searchInput';
 import SelectPlatform, { IMG_NAME, PLATFORM_IMG } from '../../components/selectPlatform';
 import { isEmpty, transformationObject, UrlData } from '../../services/utils';
 import { deleteRelation, reqSearchCommodity, reqSearchDistributorList } from './api';
-import { ItemsTableList } from './commodityContent';
 
 interface IProps {
 }
 
+const PLATFORM: any = {
+    'doudian': 'dy',
+    'youzan': 'yz'
+};
+
 /** 搜索值 */
 interface SearchInfo {
     /** 输入框value */
-    keyWord: string | number;
+    keyWord: string;
     /** 平台 */
     shopType: string;
     /** 页码 */
@@ -139,6 +144,7 @@ class ShopManagement extends React.Component<IProps, IState> {
                 title: '操作',
                 dataIndex: 'address',
                 align: 'center',
+                fixed: 'right',
                 render: (name: any, record: any) => (
                     <Space size="middle">
                         <a onClick={this.shelvesSuppliers.bind(this, record)}>下架</a>
@@ -188,12 +194,20 @@ class ShopManagement extends React.Component<IProps, IState> {
      */
     handelSelectAll = (val: boolean) => {
         const { rowSelection, itemTableList } = this.state;
+        let deleteList: any = [];
         if (!val) {
             rowSelection.selectedRowKeys = [];
         } else {
-            rowSelection.selectedRowKeys = itemTableList.map((item: any) => item.origin_num_iid);
+            rowSelection.selectedRowKeys = itemTableList.map((item: any) => item.relation_id);
+            deleteList = itemTableList.map((item: any) => {
+                return {
+                    shop_id: item.shop_id,
+                    num_iid: item.num_iid,
+                    origin_num_iid: item.origin_num_iid,
+                };
+            });
         }
-        this.setState({ isAllValue: val, rowSelection });
+        this.setState({ isAllValue: val, rowSelection, deleteList });
     };
 
     /**
@@ -226,21 +240,9 @@ class ShopManagement extends React.Component<IProps, IState> {
             return;
         }
         if (val === 'takenDown') {
-            let successNum = 0;
-            let errorNum = 0;
             // 请求大集合
-            const allRequests: any = [];
-            deleteList.forEach((item) => {
-                allRequests.push(new Promise(resolve => {
-                    deleteRelation(item).then(res => {
-                        if (res.code !== 200) {
-                            errorNum += 1;
-                        } else {
-                            successNum += 1;
-                        }
-                        resolve(res);
-                    });
-                }));
+            const allRequests: any = deleteList.map((item) => {
+                return deleteRelation(item);
             });
             const updateRes = await Promise.all(allRequests);
             const isSuccess = updateRes.every(item => item.is_success);
@@ -266,7 +268,7 @@ class ShopManagement extends React.Component<IProps, IState> {
     /**
      * 处理input搜索
      */
-    handleInputSearch = (val: string | number) => {
+    handleInputSearch = (val: string) => {
         const { secarchInfo } = this.state;
         secarchInfo.keyWord = val;
         this.setState({ secarchInfo }, () => {
@@ -277,6 +279,7 @@ class ShopManagement extends React.Component<IProps, IState> {
      * 返回上一页
      */
     rollback = () => {
+        // @ts-ignore
         document.parentWindow.location.reload();
     };
     /**
@@ -289,12 +292,15 @@ class ShopManagement extends React.Component<IProps, IState> {
             page_no: secarchInfo.pageNo,
             page_size: secarchInfo.pageSize,
         };
-        if (secarchInfo.shopType[0] !== 'all') {
+        if (secarchInfo.shopType !== 'all') {
+            secarchData.shop_type = PLATFORM[secarchInfo.shopType];
+        }
+        if (secarchInfo.keyWord && secarchInfo.keyWord.trim()) {
             secarchData.key_word = secarchInfo.keyWord;
         }
         const { items = [], total_amount = 0 } = await reqSearchDistributorList(secarchData);
         titleData.distributionNum = total_amount;
-        this.setState({ itemTableList: items, isAllValue: false, rowSelection: { ...rowSelection, selectedRowKeys: [] } });
+        this.setState({ itemTableList: items, isAllValue: false, rowSelection: { ...rowSelection, selectedRowKeys: [], deleteList: [] } });
     }
     render (): React.ReactNode {
         const { rowSelection, isAllValue, itemTableList, titleData, secarchInfo } = this.state;
@@ -331,6 +337,7 @@ class ShopManagement extends React.Component<IProps, IState> {
                         </div>
                         <div className="shop-management-table">
                             <Table
+                                // @ts-ignore
                                 columns={this.getTableTitle()}
                                 dataSource={itemTableList}
                                 rowSelection={rowSelection}
@@ -339,7 +346,8 @@ class ShopManagement extends React.Component<IProps, IState> {
                                     y: 500,
                                 }}
                                 align='center'
-                                rowKey='origin_num_iid'
+                                rowKey='relation_id'
+                                ellipsis
                             />
                         </div>
                     </div>

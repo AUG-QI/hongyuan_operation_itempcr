@@ -19,7 +19,7 @@ export const PLATFORM_IMG: any = {
     shipinhaoGray: '',
 
 };
-export const IMG_NAME:any = {
+export const IMG_NAME: any = {
     'dy': 'doudian',
     'yz': 'youzan',
 };
@@ -80,7 +80,7 @@ class SelectPlatform extends React.Component<IProps, IState> {
     componentDidMount (): void {
         const { from = '' } = this.props;
         if (from === 'distributors') {
-            this.setState({ selectMode: '' });
+            this.setState({ selectMode: 'mode' });
         }
     }
     /**

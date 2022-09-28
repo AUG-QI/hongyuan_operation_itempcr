@@ -391,6 +391,7 @@ class InventorySynchronous extends React.Component<{}, IState> {
         // 1.检查基础库存同步
         const { prewarningValue, restoreValue } = this.state;
         const basicStock: any = [{
+            id: 1,
             cid: 0,
             prewarningValue,
             restoreValue,

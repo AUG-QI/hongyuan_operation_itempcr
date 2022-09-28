@@ -1,6 +1,5 @@
 import React, { ChangeEvent } from 'react';
 import { Cascader, message, Space, Table } from 'antd';
-import  { ItemsTableList } from './commodityContent';
 import SelectPlatform, { PLATFORM_IMG } from '../../components/selectPlatform';
 import SearchInput from '../../components/searchInput';
 import './index.scss';
@@ -10,6 +9,14 @@ import FooterPage from '../../components/footerPage';
 import { NavLink } from 'react-router-dom';
 
 interface IProps {
+}
+
+export interface ItemsTableList {
+    key: React.Key;
+    name: string;
+    age: number;
+    address: string;
+    description: string;
 }
 interface IState {
     /** 类目选择 */
@@ -71,6 +78,7 @@ class CommodityManagement extends React.Component<IProps, IState>  {
                 distributionState: ['all'],
                 pageNo: 1,
                 pageSize: 20,
+                inputVal: '',
             },
             categoryInfo: '',
             shopManagementLoading: true,
@@ -162,6 +170,7 @@ class CommodityManagement extends React.Component<IProps, IState>  {
                 title: '渠道',
                 dataIndex: 'distributionState',
                 key: 'distributionState',
+                width: 150,
                 align: 'center',
                 render: (name: any, record: any) => (
                     <Space size="middle">
@@ -184,6 +193,7 @@ class CommodityManagement extends React.Component<IProps, IState>  {
                 title: '操作',
                 align: 'center',
                 dataIndex: 'operation',
+                fixed: 'right',
                 render: (name: any, record: any) => (
                     <Space size="middle">
                         <NavLink
@@ -240,6 +250,9 @@ class CommodityManagement extends React.Component<IProps, IState>  {
         const categoryInfo = this.getCategoryInfo(data);
         const { searchData } = this.state;
         searchData.category = val;
+        searchData.pageNo = 1;
+        searchData.distributionState = ['all'];
+        searchData.inputVal = '';
         this.setState({ searchData, categoryInfo }, () => {
             this.handleSearch();
         });
@@ -262,6 +275,7 @@ class CommodityManagement extends React.Component<IProps, IState>  {
     handlePlatformChange = (val : string[]) => {
         const { searchData } = this.state;
         searchData.distributionState = val;
+        searchData.pageNo = 1;
         this.setState({ searchData }, () => {
             this.handleSearch();
         });
@@ -274,6 +288,7 @@ class CommodityManagement extends React.Component<IProps, IState>  {
     handleInputSearch = (val: string) => {
         const { searchData } = this.state;
         searchData.inputVal = val;
+        searchData.pageNo = 1;
         this.setState({ searchData }, () => {
             this.handleSearch();
         });
@@ -319,9 +334,10 @@ class CommodityManagement extends React.Component<IProps, IState>  {
         if (searchData.distributionState[0] !== 'all') {
             reqData.distributionState = searchData.distributionState;
         }
-        if (numberRegular.test(searchData.inputVal)) {
-            reqData.spuId = searchData.inputVal;
-        } else {
+        const inputVal = searchData.inputVal.trim();
+        if (inputVal && numberRegular.test(inputVal)) {
+            reqData.spuId = inputVal;
+        } else if (inputVal) {
             reqData.productName = searchData.inputVal;
         }
         const { list, total } = await reqSearchCommodity(reqData);
@@ -392,8 +408,8 @@ class CommodityManagement extends React.Component<IProps, IState>  {
         const thirdCategoryId =
             searchData.category[searchData.category.length - 1];
         // 部分导出或者直接是id搜索 直接传选择的+类目
-        if (spuIdArr.length || numberRegular.test(searchData.inputVal)) {
-            const spuIds = spuIdArr || [searchData.inputVal];
+        if (spuIdArr.length || (searchData.inputVal && numberRegular.test(searchData.inputVal))) {
+            const spuIds = spuIdArr.length ? spuIdArr : searchData.inputVal.trim().split();
             // 导出选中
             await exportItemData({ spuIds, thirdCategoryId });
         } else {
@@ -401,11 +417,11 @@ class CommodityManagement extends React.Component<IProps, IState>  {
             const data: any = {};
             // 三级类目
             data.thirdCategoryId = thirdCategoryId;
-            if (searchData.distributionState[0] !== 'all') {
+            if (!searchData.distributionState.includes('all')) {
                 data.distributionState = searchData.distributionState;
             }
-            if (searchData.productName) {
-                data.distributionState = searchData.productName;
+            if (searchData.inputVal && searchData.inputVal.trim()) {
+                data.productName = searchData.inputVal;
             }
             await exportItemData(data);
         }
@@ -432,6 +448,7 @@ class CommodityManagement extends React.Component<IProps, IState>  {
                     <div className="commodity-management-content">
                         <div className="shop-management">
                             <Table
+                                // @ts-ignore
                                 columns={this.getColumns()}
                                 dataSource={itemTableList}
                                 pagination={false}
@@ -441,6 +458,7 @@ class CommodityManagement extends React.Component<IProps, IState>  {
                                 }}
                                 rowKey="spuId"
                                 loading={shopManagementLoading}
+                                ellipsis
                             />
                             <FooterPage
                                 handelSelectAll={this.handelSelectAll}

@@ -1,6 +1,6 @@
 // @ts-ignore
 import React, { ChangeEvent } from 'react';
-import { Button, Checkbox, message, Modal, Pagination } from 'antd';
+import { Button, Checkbox, message, Modal, Pagination, Spin } from 'antd';
 import { ContainerOutlined } from '@ant-design/icons';
 import './index.scss';
 import axios from 'axios';
@@ -30,6 +30,8 @@ interface IState {
     exportOptionsVisble: boolean;
     /** 上传文件弹框 */
     uploadFileDialogVisible: boolean;
+    /** 加载状态 */
+    spinning: boolean;
 }
 /** 翻页器组建 */
 class FooterPage extends React.Component<IProps, IState>  {
@@ -39,6 +41,7 @@ class FooterPage extends React.Component<IProps, IState>  {
             pageSize: 20,
             exportOptionsVisble: false,
             uploadFileDialogVisible: false,
+            spinning: false,
         };
     }
     componentDidMount (): void {
@@ -109,9 +112,10 @@ class FooterPage extends React.Component<IProps, IState>  {
      * 处理导出
      * @param e
      */
-    onchange = (event: ChangeEvent<any>) => {
+    handleFiletUpload = (event: ChangeEvent<any>) => {
         const files = event.target.files;
         const formData = new FormData();
+        this.setState({ spinning: true });
         formData.append('file', files[0]);
         axios.post(`${config.BASE_URL}/itemManage/importModifedFile`, formData, {
             withCredentials: true,
@@ -119,20 +123,20 @@ class FooterPage extends React.Component<IProps, IState>  {
         })
             .then((response) => {
                 if (response.data.code !== 200) {
-                    return message.error('上传失败');
+                    return message.error('上传失败,请检查表格是否填写完整');
                 }
                 message.success('上传成功');
-                this.setState({ uploadFileDialogVisible: false });
+                this.setState({ uploadFileDialogVisible: false, spinning: false });
             })
             .catch(() => {
-                this.setState({ uploadFileDialogVisible: false });
-                return message.error('上传失败');
+                this.setState({ uploadFileDialogVisible: false, spinning: false  });
+                return message.error('上传失败,请检查表格是否填写完整');
             });
     }
 
     render () {
         const { from, isAllValue, handelOperationBtn, total, selectNum,  pageNo } = this.props;
-        const { pageSize, exportOptionsVisble, uploadFileDialogVisible } = this.state;
+        const { pageSize, exportOptionsVisble, uploadFileDialogVisible, spinning } = this.state;
         return (
             <div className="footer-page">
                 <div className="operation-btns">
@@ -142,7 +146,7 @@ class FooterPage extends React.Component<IProps, IState>  {
                         // @ts-ignore
                         onChange={this.handelSelectAll}
                     >
-                        全选本页 {selectNum > 0 && <span>（已选{selectNum}）</span>}
+                        全选本页{selectNum > 0 && <span>（{selectNum}）</span>}
                     </Checkbox>
                     {from === 'productList' && (
                         <>
@@ -165,7 +169,7 @@ class FooterPage extends React.Component<IProps, IState>  {
                     )}
                     {
                         exportOptionsVisble && <div className='export-options'>
-                            <div className='options-item' onClick={() => handelOperationBtn('exportItemSelected')}>选择商品</div>
+                            <div className='options-item' onClick={() => handelOperationBtn('exportItemSelected')}>所选商品</div>
                             <div className='options-item' onClick={() => handelOperationBtn('exportItemsAll')}>全部商品</div>
                         </div>
                     }
@@ -178,17 +182,19 @@ class FooterPage extends React.Component<IProps, IState>  {
                     current={pageNo}
                 />
                 <Modal title="导入商品信息" open={uploadFileDialogVisible} onCancel={this.closeUploadInfoDialog} footer={null} className='upload-info-dialog'>
-                    <div className='ant-upload ant-upload-drag' onClick={this.updateFile} >
-                        <p className="ant-upload-drag-icon">
-                            <ContainerOutlined />
-                        </p>
-                        <p className="ant-upload-text">点击到这里上传</p>
-                        <p className="ant-upload-hint">
-                            支持格式：.xls、.xlsx
-                        </p>
-                    </div>
+                    <Spin spinning={spinning}>
+                        <div className='ant-upload ant-upload-drag' onClick={this.updateFile} >
+                            <p className="ant-upload-drag-icon">
+                                <ContainerOutlined />
+                            </p>
+                            <p className="ant-upload-text">点击到这里上传</p>
+                            <p className="ant-upload-hint">
+                                支持格式：.xls、.xlsx
+                            </p>
+                        </div>
+                    </Spin>
                 </Modal>
-                <input type="file" id='filetUpload' onChange={this.onchange} style={{ display: 'none' }}  />
+                <input type="file" id='filetUpload' onChange={this.handleFiletUpload} style={{ display: 'none' }}  />
             </div>
         );
     }

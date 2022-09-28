@@ -11,7 +11,13 @@
     &-content {
         margin: 20px;
         border-radius: 20px;
+        .ant-table {
+            padding: 0 10px;
+            border-radius: 10px;
+            
+        }
     }
+  
     .location {
         justify-content: flex-end;
     }
@@ -25,24 +31,42 @@
         display: flex;
         margin-left: 20px;
     }
+    .ant-table-header {
+        .ant-table-thead {
+            border: 1px solid #000;
+        }
+        tr {
+            border: 1px solid #000;
+        }
+    }
     .ant-table-thead {
         th {
             background: #fff !important;
             &::before {
                 display: none !important;
             }
+            border-bottom: 1px solid #eee;
         }
        
+    }
+    .ant-table-tbody {
+        td {
+            padding: 10px 16px;
+        }
+
     }
     .ant-table-empty {
         border-radius: 8px;
     }
     .distribution-state {
         display: flex;
+        flex-wrap: wrap;
+        justify-content: center;
         img {
-            width: 30px;
-            height: 30px;
+            width: 22px;
+            height: 22px;
             margin-right: 10px;
+            margin-bottom: 10px;
         }
     }
 
@@ -63,6 +87,17 @@
         color: rgba(32,32,32,0.8);
         font-size: 12px;
     }
+    &-name {
+        width: 200px;
+        height: 40px;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        -webkit-line-clamp: 2;
+        /*!autoprefixer:off*/
+        -webkit-box-orient: vertical;
+        /*autoprefixer:on*/
+        display: -webkit-box;
+    }
 }
 
 .ant-cascader-menu {
@@ -70,6 +105,8 @@
 }
 .shop-management {
     // margin: ;
+    // border-radius: 10px;
+    // overflow: hidden;
     .ant-table-wrapper {
         margin-bottom: 100px;
     }
@@ -127,7 +164,7 @@
         margin: 0 20px;
         .ant-table-thead {
             th {
-                border: none;
+                // border: none;
                 font-weight: 400;
                 color: #202020;
                 &::before {
@@ -159,7 +196,10 @@
     .ant-table-body {
         height: calc(100vh - 306px );
     }
-    .ant-table-cell {
-        border-bottom: none;
-    }
+    // .ant-table-cell:last-child {
+    //     td {
+    //         border-bottom: none;
+    //     }
+    //     // border-bottom: none;
+    // }
 }

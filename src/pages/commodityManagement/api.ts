@@ -245,14 +245,15 @@ export const delStockWarningInfo = (params: string) => {
 interface ExportItemParams {
     spuIds?: string[];
     thirdCategoryId?: number;
-    distributionState?: number;
+    distributionState?: any;
+    productName?: string;
 }
 
 /**
  * 导出商品数据
  */
 export const exportItemData = (params: ExportItemParams) => {
-    const { spuIds = [], thirdCategoryId, distributionState } = params;
+    const { spuIds = [], thirdCategoryId, distributionState = [], productName } = params;
     // 拼接url
     const urlList = [];
     if (spuIds.length) {
@@ -263,8 +264,13 @@ export const exportItemData = (params: ExportItemParams) => {
     if (thirdCategoryId) {
         urlList.push(`thirdCategoryId=${thirdCategoryId}`);
     }
-    if (distributionState) {
-        urlList.push(`distributionState=${distributionState}`);
+    if (distributionState.length) {
+        const distributionStateArr = distributionState.map((item: string) => `distributionState=${item}`);
+        const data = distributionStateArr.join('&');
+        urlList.push(data);
+    }
+    if (productName) {
+        urlList.push(`productName=${productName}`);
     }
     const urlData = urlList.join('&');
     window.open(`${config.BASE_URL}/itemManage/exportItemData?${urlData}`);
