@@ -152,6 +152,7 @@ export const getCategoryOptions = (): Promise<any> => {
                 // 处理一下数据再返回
                 const categoryTreeData = setTreeData(data.categoryData);
                 resolve(categoryTreeData);
+                return;
             }
         }
         axios.post('/itemManage/getCategoryList', null)
@@ -275,5 +276,25 @@ export const exportItemData = (params: ExportItemParams) => {
     const urlData = urlList.join('&');
     window.open(`${config.BASE_URL}/itemManage/exportItemData?${urlData}`);
     return 'success';
+};
+
+/**
+ * 保存下架日志
+ * @param params 
+ * @returns 
+ */
+export const saveItemRemovedLog = (params: any) => {
+    return new Promise((resolve, reject) => {
+        axios.post('/itemManage/saveItemRemovedLog', params)
+            .then((response: any) => {
+                if (response.code !== 200) {
+                    resolve('error');
+                }
+                resolve('success');
+            })
+            .catch((error: any) => {
+                reject(error);
+            });
+    });
 };
 

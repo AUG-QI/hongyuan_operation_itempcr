@@ -399,6 +399,15 @@ class CommodityManagement extends React.Component<IProps, IState>  {
             this.handelExportItems(rowSelection.selectedRowKeys);
         }
     }
+    /**
+     * 上传后回调
+     */
+    filetUploadCallback = (status: string) => {
+        if (status !== 'success') {
+            return;
+        }
+        this.handleSearch();
+    }
 
     /**
      * 开始处理选择的导出商品
@@ -454,7 +463,7 @@ class CommodityManagement extends React.Component<IProps, IState>  {
                                 pagination={false}
                                 rowSelection={rowSelection}
                                 scroll={{
-                                    y: 500,
+                                    y: 1000,
                                 }}
                                 rowKey="spuId"
                                 loading={shopManagementLoading}
@@ -468,6 +477,7 @@ class CommodityManagement extends React.Component<IProps, IState>  {
                                 isAllValue={isAllValue}
                                 from="productList"
                                 total={total}
+                                filetUploadCallback={this.filetUploadCallback}
                                 selectNum={rowSelection.selectedRowKeys.length}
                             ></FooterPage>
                         </div>

@@ -3,8 +3,9 @@ import React, { ChangeEvent } from 'react';
 import { Button, Checkbox, message, Modal, Pagination, Spin } from 'antd';
 import { ContainerOutlined } from '@ant-design/icons';
 import './index.scss';
-import axios from 'axios';
+import axios from '../../services/axios';
 import config from '../../config';
+
 interface IProps {
     /** 处理全选按钮 */
     handelSelectAll: Function;
@@ -22,24 +23,28 @@ interface IProps {
     selectNum: number | any;
     /** 当前页 */
     pageNo: number;
+    /** 上传文件后回调 */
+    filetUploadCallback?: Function;
 }
+
 interface IState {
     /** 每页条数 */
     pageSize: number;
     /** 导出选项可见 */
-    exportOptionsVisble: boolean;
+    exportOptionsVisible: boolean;
     /** 上传文件弹框 */
     uploadFileDialogVisible: boolean;
     /** 加载状态 */
     spinning: boolean;
 }
+
 /** 翻页器组建 */
 class FooterPage extends React.Component<IProps, IState>  {
     constructor (props: IProps) {
         super(props);
         this.state = {
             pageSize: 20,
-            exportOptionsVisble: false,
+            exportOptionsVisible: false,
             uploadFileDialogVisible: false,
             spinning: false,
         };
@@ -74,7 +79,7 @@ class FooterPage extends React.Component<IProps, IState>  {
      */
     clickExportOption = (val: boolean, event: ChangeEvent<any>) => {
         event.stopPropagation();
-        this.setState({ exportOptionsVisble: val });
+        this.setState({ exportOptionsVisible: val });
     }
     /**
      * 处理导入商品
@@ -115,28 +120,39 @@ class FooterPage extends React.Component<IProps, IState>  {
     handleFiletUpload = (event: ChangeEvent<any>) => {
         const files = event.target.files;
         const formData = new FormData();
+        // 上传文件限制类型
         this.setState({ spinning: true });
         formData.append('file', files[0]);
+        const { filetUploadCallback } = this.props;
         axios.post(`${config.BASE_URL}/itemManage/importModifedFile`, formData, {
             withCredentials: true,
             headers: { 'Content-Type': 'multipart/form-data;charset=UTF-8' },
         })
-            .then((response) => {
-                if (response.data.code !== 200) {
-                    return message.error('上传失败,请检查表格是否填写完整');
+            .then((response: any) => {
+                if (response.code !== 200) {
+                    message.error('上传失败,请检查表格是否填写完整');
+                    event.target.value = '';
+                    this.setState({ spinning: false });
+                    filetUploadCallback && filetUploadCallback('error');
+                    return;
+                } else {
+                    message.success('上传成功');
+                    filetUploadCallback && filetUploadCallback('success');
                 }
-                message.success('上传成功');
+                event.target.value = '';
                 this.setState({ uploadFileDialogVisible: false, spinning: false });
             })
             .catch(() => {
-                this.setState({ uploadFileDialogVisible: false, spinning: false  });
+                this.setState({ uploadFileDialogVisible: false, spinning: false });
+                event.target.value = '';
+                filetUploadCallback && filetUploadCallback('error');
                 return message.error('上传失败,请检查表格是否填写完整');
             });
     }
 
     render () {
         const { from, isAllValue, handelOperationBtn, total, selectNum,  pageNo } = this.props;
-        const { pageSize, exportOptionsVisble, uploadFileDialogVisible, spinning } = this.state;
+        const { pageSize, exportOptionsVisible, uploadFileDialogVisible, spinning } = this.state;
         return (
             <div className="footer-page">
                 <div className="operation-btns">
@@ -168,7 +184,7 @@ class FooterPage extends React.Component<IProps, IState>  {
                         </div>
                     )}
                     {
-                        exportOptionsVisble && <div className='export-options'>
+                        exportOptionsVisible && <div className='export-options'>
                             <div className='options-item' onClick={() => handelOperationBtn('exportItemSelected')}>所选商品</div>
                             <div className='options-item' onClick={() => handelOperationBtn('exportItemsAll')}>全部商品</div>
                         </div>

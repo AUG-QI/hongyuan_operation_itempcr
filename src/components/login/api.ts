@@ -15,6 +15,7 @@ export interface PassWordLoginParams {
 export const passwordlogin = (params: PassWordLoginParams) => {
     return new Promise((resolve, reject) => {
         axios.post('/user/login', {
+            headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
             account: params.username,
             password: params.password,
         })

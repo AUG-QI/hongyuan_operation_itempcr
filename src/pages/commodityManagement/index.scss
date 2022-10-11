@@ -12,8 +12,9 @@
         margin: 20px;
         border-radius: 20px;
         .ant-table {
-            padding: 0 10px;
+            //padding: 0 10px;
             border-radius: 10px;
+            overflow: hidden;
             
         }
     }

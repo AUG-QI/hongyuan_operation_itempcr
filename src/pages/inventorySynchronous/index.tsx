@@ -1,12 +1,13 @@
 import React, { ChangeEvent } from 'react';
 import {
-    Alert, Button, Input, message, Modal, Spin, Tree
+    Alert, Button, Input, InputNumber, message, Modal, Spin, Tree
 } from 'antd';
 import { delStockWarningInfo, getBasicStockValue, getCategoryOptions, updateStockWarningInfo } from '../commodityManagement/api';
 import './index.scss';
 
 /** 特殊预警标题数据 */
 const SPECIAL_STOCK_TITLE_DATA: string[] = [
+    '类目',
     '类目',
     '预警值',
     '上升阈值',
@@ -31,7 +32,7 @@ interface IState {
     inventoryCategoryData: any;
     /** 预警值 */
     prewarningValue: number | undefined;
-    /** 上升阔值 */
+    /** 上升阈值 */
     restoreValue: number | undefined;
     /** 将要删除名单 */
     willDeletedList: string[] | any;
@@ -135,16 +136,16 @@ class InventorySynchronous extends React.Component<{}, IState> {
 
     /**
      * 改变input框
-     * @param type 
-     * @param event 
+     * @param type
+     * @param event
      */
-    changeInputValue = (type: string, event: ChangeEvent<any>) => {
+    changeInputValue = (type: string, value: string) => {
         const { selectData } = this.state;
         const data: any = {
             alertValue: 'prewarningValue',
             upValue: 'restoreValue',
         };
-        const inputValue = event.target.value;
+        const inputValue = value;
         selectData.forEach((item: any) => {
             item[data[type]] = inputValue;
         });
@@ -164,11 +165,15 @@ class InventorySynchronous extends React.Component<{}, IState> {
                 <div className="set-warning-inputs">
                     <div className="setting-ipt">
                         <span> 预警值：</span>
-                        <Input value={alertValue} onChange={this.changeInputValue.bind(this, 'alertValue')}></Input>
+                        <InputNumber controls={false} value={alertValue}
+                            // @ts-ignore
+                            onChange={this.changeInputValue.bind(this, 'alertValue')}></InputNumber>
                     </div>
                     <div className="setting-ipt">
                         <span> 上升阈值：</span>
-                        <Input value={upValue} onChange={this.changeInputValue.bind(this, 'upValue')}></Input>
+                        <InputNumber controls={false} value={upValue}
+                            // @ts-ignore
+                            onChange={this.changeInputValue.bind(this, 'upValue')}></InputNumber>
                     </div>
                 </div>
                 <div>
@@ -182,7 +187,7 @@ class InventorySynchronous extends React.Component<{}, IState> {
     };
     /**
      * 删除所有数据
-     * @returns 
+     * @returns
      */
     delAllData = async () => {
         const { inventoryCategoryData } = this.state;
@@ -196,9 +201,8 @@ class InventorySynchronous extends React.Component<{}, IState> {
     checkSpecialStockDialogFooterRender = () => {
         return (
             <>
-                <div onClick={this.delAllData}>全部清空</div>
+                <div className='all-empty' onClick={this.delAllData}>全部清空</div>
                 <div>
-                    {' '}
                     <Button onClick={this.closeModifySpecialStock}>
                         取消
                     </Button>
@@ -222,17 +226,21 @@ class InventorySynchronous extends React.Component<{}, IState> {
      */
     submitModifySpecialStock = async () => {
         const { willDeletedList } = this.state;
+        let res = null;
         // 如果有删除的就去删掉
         if (willDeletedList.length) {
-            const res: any = await delStockWarningInfo(willDeletedList);
-            if (res == 'success') {
-                message.success('保存成功');
-            } else {
-                message.error('保存失败');
-            }
+            res = await delStockWarningInfo(willDeletedList);
         }
         const { inventoryCategoryData } = this.state;
-        await updateStockWarningInfo(inventoryCategoryData);
+        // 有更新再去更新
+        if (inventoryCategoryData.length) {
+            res = await updateStockWarningInfo(inventoryCategoryData);
+        }
+        if (res == 'success') {
+            message.success('保存成功');
+        } else {
+            message.error('保存失败');
+        }
         this.setState({ checkSpecialStockDialogVisible: false, willDeletedList: [] });
     };
     /**
@@ -265,15 +273,15 @@ class InventorySynchronous extends React.Component<{}, IState> {
     };
     /**
      * 改变input框
-     * @param type 
-     * @param id 
-     * @param e 
+     * @param type
+     * @param id
+     * @param e
      */
-    changeItemInput = (type: string, id: string | number, event: ChangeEvent<any>) => {
+    changeItemInput = (type: string, id: string | number, value: ChangeEvent<any>) => {
         const { inventoryCategoryData } = this.state;
         inventoryCategoryData.forEach((item: any) => {
             if (item.cid == id) {
-                item[type] =  event.target.value;
+                item[type] = value;
             }
         });
         this.setState({ inventoryCategoryData });
@@ -287,10 +295,14 @@ class InventorySynchronous extends React.Component<{}, IState> {
                         <div key={item.cid} className="special-stock-title">
                             <span>{item.name}</span>
                             <span>
-                                <Input onChange={this.changeItemInput.bind(this, 'prewarningValue', item.cid)} value={item.prewarningValue}></Input>
+                                <InputNumber controls={false}
+                                    // @ts-ignore
+                                    onChange={this.changeItemInput.bind(this, 'prewarningValue', item.cid)} value={item.prewarningValue}></InputNumber>
                             </span>
                             <span>
-                                <Input onChange={this.changeItemInput.bind(this, 'restoreValue', item.cid)}  value={item.restoreValue}></Input>
+                                <InputNumber controls={false}
+                                    // @ts-ignore
+                                    onChange={this.changeItemInput.bind(this, 'restoreValue', item.cid)}  value={item.restoreValue}></InputNumber>
                             </span>
                             <span
                                 className='del-btn'
@@ -385,7 +397,7 @@ class InventorySynchronous extends React.Component<{}, IState> {
     }
     /**
      * 保存设置
-     * @returns 
+     * @returns
      */
     saveSte = async () => {
         // 1.检查基础库存同步
@@ -410,8 +422,8 @@ class InventorySynchronous extends React.Component<{}, IState> {
       * 修改基础预警值
       * @returns
     */
-    changeBasicStockValue = (type: string, event: ChangeEvent<any>) => {
-        const value: string = event.target.value;
+    changeBasicStockValue = (type: string, value: string) => {
+        // const value: string = event.target.value;
         const updateInfo: any = { [type]: value };
         this.setState(updateInfo);
     }
@@ -422,23 +434,31 @@ class InventorySynchronous extends React.Component<{}, IState> {
             <div className="inventory-synchronous">
                 <Spin spinning={spinning}>
                     <Alert message={ALERT_MSG} />
-                    <>
+                    <div className='basis-input'>
                         <h3>基础库存同步</h3>
                         <div>
                             <div className="basis-ipt">
                                 <span>预警值：</span>
-                                <Input value={prewarningValue} onChange={this.changeBasicStockValue.bind(this, 'prewarningValue')} placeholder="请输入预警值" />
+                                <InputNumber controls={false}
+                                    // @ts-ignore
+                                    value={prewarningValue}
+                                    // @ts-ignore
+                                    onChange={this.changeBasicStockValue.bind(this, 'prewarningValue')} placeholder="请输入预警值" />
                             </div>
                             <div className="basis-ipt">
-                                <span>上升阔值：</span>
-                                <Input value={restoreValue}  onChange={this.changeBasicStockValue.bind(this, 'restoreValue')}  placeholder="请输入上升阔值" />
+                                <span>上升阈值：</span>
+                                <InputNumber controls={false}
+                                    // @ts-ignore
+                                    value={restoreValue}
+                                    // @ts-ignore
+                                    onChange={this.changeBasicStockValue.bind(this, 'restoreValue')}  placeholder="请输入上升阈值" />
                             </div>
                         </div>
-                    </>
+                    </div>
                     <div className="special-category">
                         <h3>特殊库存同步</h3>
                         <div className="info">
-                            預警/上升岡值：
+                            预警/上升阈值：
                             <span
                                 className="operation-btn"
                                 onClick={this.categorySettings}

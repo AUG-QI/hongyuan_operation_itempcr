@@ -2,7 +2,7 @@ import axios from 'axios';
 import config from '../config';
 // 对所有 axios 请求做处理
 axios.defaults.withCredentials = true;
-
+// axios.defaults.headers = { 'Content-Type': 'application/x-www-form-urlencoded' };
 const instance = axios.create({ baseURL: config.BASE_URL });
 
 // 响应拦截器

@@ -28,7 +28,7 @@ class SearchInput extends React.Component<IProps, IState> {
     componentDidMount (): void {
         const { from } = this.props;
         if (from === 'distributors') {
-            const placeholder = '请输入供应商名称/ID搜索';
+            const placeholder = '请输入分销商名称/ID搜索';
             this.setState({ placeholder });
         }
     }

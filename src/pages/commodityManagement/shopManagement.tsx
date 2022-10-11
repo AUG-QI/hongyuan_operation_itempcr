@@ -7,14 +7,14 @@ import FooterPage from '../../components/footerPage';
 import SearchInput from '../../components/searchInput';
 import SelectPlatform, { IMG_NAME, PLATFORM_IMG } from '../../components/selectPlatform';
 import { isEmpty, transformationObject, UrlData } from '../../services/utils';
-import { deleteRelation, reqSearchCommodity, reqSearchDistributorList } from './api';
+import { deleteRelation, reqSearchCommodity, reqSearchDistributorList, saveItemRemovedLog } from './api';
 
 interface IProps {
 }
 
 const PLATFORM: any = {
-    'doudian': 'dy',
-    'youzan': 'yz'
+    doudian: 'dy',
+    youzan: 'yz',
 };
 
 /** 搜索值 */
@@ -39,6 +39,7 @@ interface TitleData {
     itemTitle?: string;
     /** 铺货数量 */
     distributionNum?: number;
+    itemId: any;
 }
 
 interface DeleteList {
@@ -80,6 +81,7 @@ class ShopManagement extends React.Component<IProps, IState> {
                 itemImgUrl: '',
                 itemTitle: '',
                 distributionNum: 0,
+                itemId: '',
             },
             secarchInfo: {
                 shopType: 'all',
@@ -103,6 +105,7 @@ class ShopManagement extends React.Component<IProps, IState> {
         const titleData = {
             itemImgUrl: itemData.portalSquareImgUrl || '',
             itemTitle: itemData.productName || '',
+            itemId: urlData.id,
         };
         const { secarchInfo } = this.state;
         secarchInfo.originNumId = urlData.id;
@@ -156,19 +159,39 @@ class ShopManagement extends React.Component<IProps, IState> {
     /**
      * 下架商品
      */
-    shelvesSuppliers = async ({ shop_id, num_iid, origin_num_iid }: any) => {
+    shelvesSuppliers = async (record: any) => {
+        const { shop_id, num_iid, origin_num_iid, shop_type, user_id, shop_name  } = record;
+        // @ts-ignore
+        const userInfo: any = JSON.parse(sessionStorage.getItem('userInfo')) || {};
+        const { titleData } = this.state;
         const data = {
             shop_id,
             num_iid,
             origin_num_iid,
         };
         const res: any = await deleteRelation(data);
+        const logData = {
+            platformName: shop_type,
+            biyaoItemId: titleData.itemId,
+            biyaoItemName: titleData.itemTitle,
+            distributorId: user_id,
+            distributorShopName: shop_name,
+            operationAccount: userInfo.account,
+        };
+        // 保存操作日志
+        this.saveDeleteRelationLog([logData]);
         if (!res.is_success) {
             message.error(res.error_msg);
             return;
         }
         message.success('下架成功');
         this.hadleAllSearch();
+    }
+    /**
+     * 保存操作日志
+     */
+    saveDeleteRelationLog = async (logData: any) => {
+        await saveItemRemovedLog(logData);
     }
     /**
      * 改变表格状态
@@ -234,7 +257,9 @@ class ShopManagement extends React.Component<IProps, IState> {
      * @param val
      */
     handelOperationBtn = async (val: string) => {
-        const { deleteList } = this.state;
+        const { deleteList, titleData } = this.state;
+        // @ts-ignore
+        const userInfo = JSON.parse(sessionStorage.getItem('userInfo')) || {};
         if (!deleteList.length) {
             message.warning('请先选择平台');
             return;
@@ -245,12 +270,23 @@ class ShopManagement extends React.Component<IProps, IState> {
                 return deleteRelation(item);
             });
             const updateRes = await Promise.all(allRequests);
+            const saveLogData = updateRes.map(item => {
+                return {
+                    platformName: item.shop_type,
+                    biyaoItemId: titleData.itemId,
+                    biyaoItemName: titleData.itemTitle,
+                    distributorId: item.user_id,
+                    distributorShopName: item.shop_name,
+                    operationAccount: userInfo.account,
+                };
+            });
             const isSuccess = updateRes.every(item => item.is_success);
             if (isSuccess) {
                 message.success('下架成功');
             } else {
                 message.error('下架失败');
             }
+            this.saveDeleteRelationLog(saveLogData);
             this.hadleAllSearch();
         }
     };
@@ -343,7 +379,7 @@ class ShopManagement extends React.Component<IProps, IState> {
                                 rowSelection={rowSelection}
                                 pagination={false}
                                 scroll={{
-                                    y: 500,
+                                    y: 1000,
                                 }}
                                 align='center'
                                 rowKey='relation_id'
