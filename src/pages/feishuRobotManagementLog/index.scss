@@ -1,0 +1,35 @@
+.feishu-robot-management-log {
+    .switch-btn {
+        display: flex;
+        justify-content: flex-end;
+        margin-right: 10px;
+        margin-top: 20px;
+        .ant-btn {
+            border-radius: 10px;
+        }
+    }
+    .log-search {
+        margin-top: 10px;
+    }
+}
+.input-item {
+    display: flex;
+    align-items: center;
+    span {
+        margin-left: 10px;
+        width: 200px;
+    }
+    .error-text {
+        color:red;
+    }
+    margin-bottom: 20px;
+}
+.feishu-robot-modify-log {
+    .log-table {
+        height: calc(100vh - 242px);
+    }
+    .log-table .ant-table-body {
+        min-height: calc(100vh - 330px) !important;
+        max-height: calc(100vh - 381px) !important;
+    }
+}

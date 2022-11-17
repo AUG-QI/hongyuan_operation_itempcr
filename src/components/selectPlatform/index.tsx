@@ -15,13 +15,15 @@ export const PLATFORM_IMG: any = {
     hongGray: 'https://q.aiyongtech.com/biyao/imgs/xiaohongshu_logo_%20grey.png',
     youzan: 'https://q.aiyongtech.com/biyao/imgs/youzan_logo.png',
     youzanGray: 'https://q.aiyongtech.com/biyao/imgs/youzan_logo_%20grey.png',
-    shipinhao: '',
-    shipinhaoGray: '',
+    shipinhao: 'https://q.aiyongtech.com/biyao/imgs/shipinghao_logo.png',
+    shipinhaoGray: 'https://q.aiyongtech.com/biyao/imgs/shipinghao_logo_grey.png',
 
 };
 export const IMG_NAME: any = {
-    'dy': 'doudian',
-    'yz': 'youzan',
+    dy: 'doudian',
+    yz: 'youzan',
+    ks: 'kuai',
+    videoShop: 'shipinhao',
 };
 /**
  * 下拉选择项
@@ -39,22 +41,14 @@ export const PLATFORM_OPTIONS = [
         value: 'youzan',
         label: '有赞',
     },
-    // {
-    //     value: 'kuai',
-    //     label: '快手',
-    // },
-    // {
-    //     value: 'hong',
-    //     label: '小红书',
-    // },
-    // {
-    //     value: 'youzan',
-    //     label: '有赞',
-    // },
-    // {
-    //     value: 'shipinhao',
-    //     label: '视频号',
-    // },
+    {
+        value: 'kuai',
+        label: '快手',
+    },
+    {
+        value: 'shipinhao',
+        label: '视频号',
+    },
 ];
 
 interface IProps {
@@ -105,16 +99,13 @@ class SelectPlatform extends React.Component<IProps, IState> {
 
     render () {
         const { from, distributionState } = this.props;
-        const { selectMode } = this.state;
         return (
             <Select
-                mode={selectMode}
-                optionLabelProp='label'
+                mode={'multiple'}
                 value={distributionState}
                 onChange={this.onChange}
                 maxTagCount='responsive'
                 style={{ width: 200 }}
-                optionFilterProp='label'
                 showArrow={true}
                 notFoundContent='暂无搜索内容'
             >

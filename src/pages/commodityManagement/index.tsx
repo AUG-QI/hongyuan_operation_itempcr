@@ -113,13 +113,7 @@ class CommodityManagement extends React.Component<IProps, IState>  {
             this.setState({ shopManagementLoading: false });
             return;
         }
-        // 设置默认数据 - 第一条数据
-        let firstData: any = {
-            data: [],
-            name: [],
-        };
-        firstData = this.getFirstCategoryData(categoryoptions, firstData);
-        this.setState({ categoryoptions, searchData: { ...searchData, category: firstData.data, categoryInfo: firstData.name } }, () => {
+        this.setState({ categoryoptions, searchData }, () => {
             this.handleSearch();
         });
     }
@@ -185,6 +179,16 @@ class CommodityManagement extends React.Component<IProps, IState>  {
                             ) : (
                                 <img src={PLATFORM_IMG['youzanGray']} alt="" />
                             )}
+                            {record.kuaiDistributionState === 1 ? (
+                                <img src={PLATFORM_IMG['kuai']} alt="" />
+                            ) : (
+                                <img src={PLATFORM_IMG['kuaiGray']} alt="" />
+                            )}
+                            {record.shipinhaoDistributionState === 1 ? (
+                                <img src={PLATFORM_IMG['shipinhao']} alt="" />
+                            ) : (
+                                <img src={PLATFORM_IMG['shipinhaoGray']} alt="" />
+                            )}
                         </div>
                     </Space>
                 ),
@@ -211,9 +215,10 @@ class CommodityManagement extends React.Component<IProps, IState>  {
      * 改变表格选中状态
      * @param val
      */
-    changeTableSelectedState = (val: string[]) => {
+    changeTableSelectedState = (val: string[], data: any) => {
         const { rowSelection, itemTableList } = this.state;
         rowSelection.selectedRowKeys = val;
+        rowSelection.selectedRowData = data;
         if (val.length !== itemTableList.length) {
             this.setState({ isAllValue: false });
         } else {
@@ -221,51 +226,18 @@ class CommodityManagement extends React.Component<IProps, IState>  {
         }
     };
     /**
-     * 获取第一个类目数据
-     * @param categoryoptions
-     * @param arr
-     * @returns
-     */
-    getFirstCategoryData = (categoryoptions: any, firstData: any): string[] => {
-        if (!categoryoptions.length) {
-            return [];
-        }
-        categoryoptions?.forEach((item: any, index: number) => {
-            if (index === 0) {
-                firstData.data.push(item.categoryId);
-                firstData.name.push(item.categoryName);
-                if (item?.children) {
-                    this.getFirstCategoryData(item.children, firstData);
-                }
-            }
-        });
-        return firstData;
-    }
-
-    /**
      * 处理类目改变
      * @param val
      */
-    handleCategoryChange = (val: string[], data: any) => {
-        const categoryInfo = this.getCategoryInfo(data);
+    handleCategoryChange = (val: string[]) => {
         const { searchData } = this.state;
         searchData.category = val;
         searchData.pageNo = 1;
         searchData.distributionState = ['all'];
         searchData.inputVal = '';
-        this.setState({ searchData, categoryInfo }, () => {
+        this.setState({ searchData }, () => {
             this.handleSearch();
         });
-    }
-
-    /**
-     * 获取类目中文名称
-     */
-    getCategoryInfo = (data: any) => {
-        const arr = data.map((item: any) => {
-            return item.categoryName;
-        });
-        return arr.join('/');
     }
 
     /**
@@ -329,11 +301,11 @@ class CommodityManagement extends React.Component<IProps, IState>  {
             pageNo: searchData.pageNo,
             pageSize: searchData.pageSize,
         };
-        // 处理搜索数据
-        // 如果是所有平台就不用传了
+        // 处理搜索数据 - 如果是所有平台就不用传了
         if (searchData.distributionState[0] !== 'all') {
             reqData.distributionState = searchData.distributionState;
         }
+        // 处理一下input是搜索id还是关键词
         const inputVal = searchData.inputVal.trim();
         if (inputVal && numberRegular.test(inputVal)) {
             reqData.spuId = inputVal;
@@ -353,15 +325,23 @@ class CommodityManagement extends React.Component<IProps, IState>  {
      * @returns
      */
     handleItemTableList = (data: any) => {
-        let tableData = [];
-        const { categoryInfo } = this.state;
-        tableData = data.map((item: any) => {
+        return data.map((item: any) => {
+            const categoryNameList = [];
+            if (item.firstCategoryName) {
+                categoryNameList.push(item.firstCategoryName);
+            }
+            if (item.secondCategoryName) {
+                categoryNameList.push(item.secondCategoryName);
+            }
+            if (item.thirdCategoryName) {
+                categoryNameList.push(item.thirdCategoryName);
+            }
+            const categoryInfo = categoryNameList.join('/');
             return {
                 ...item,
                 categoryInfo,
             };
         });
-        return tableData;
     }
     /**
      * 全选
@@ -373,21 +353,26 @@ class CommodityManagement extends React.Component<IProps, IState>  {
             rowSelection.selectedRowKeys = [];
         } else {
             rowSelection.selectedRowKeys = itemTableList.map((item: any) => item.spuId);
+            rowSelection.selectedRowData = itemTableList;
         }
         this.setState({ isAllValue, rowSelection });
     }
 
     /**
      * 处理导出按钮
-     * @param type 
-     * @returns 
+     * @param type
+     * @returns
      */
     handelOperationBtn = (type: string) => {
         // 导出全部
         if (type === 'exportItemsAll') {
-            const { total } = this.state;
+            const { total, searchData } = this.state;
             if (total < 1) {
                 return message.warning('暂无数据导出');
+            }
+            // 选中的商品不是同一个类目 提示框
+            if (!searchData.category.length) {
+                return message.warning('所勾选商品非同一类目,无法导出');
             }
             this.handelExportItems();
         } else if (type === 'exportItemSelected') {
@@ -396,7 +381,13 @@ class CommodityManagement extends React.Component<IProps, IState>  {
             if (!rowSelection.selectedRowKeys.length) {
                 return message.warning('请先勾选商品');
             }
-            this.handelExportItems(rowSelection.selectedRowKeys);
+            const categoryList = rowSelection.selectedRowData.map((item: any) => item.categoryInfo);
+            const categoryInfo = new Set(categoryList);
+            // 选中的商品不是同一个类目
+            if (categoryInfo.size !== 1) {
+                return message.warning('所勾选商品非同一类目,无法导出');
+            }
+            this.handelExportItems(rowSelection.selectedRowKeys, categoryList[0]);
         }
     }
     /**
@@ -412,10 +403,10 @@ class CommodityManagement extends React.Component<IProps, IState>  {
     /**
      * 开始处理选择的导出商品
      */
-    handelExportItems = async (spuIdArr = []) => {
+    handelExportItems = async (spuIdArr = [], id: string = '') => {
         const { searchData } = this.state;
         const thirdCategoryId =
-            searchData.category[searchData.category.length - 1];
+            searchData.category[searchData.category.length - 1] || id;
         // 部分导出或者直接是id搜索 直接传选择的+类目
         if (spuIdArr.length || (searchData.inputVal && numberRegular.test(searchData.inputVal))) {
             const spuIds = spuIdArr.length ? spuIdArr : searchData.inputVal.trim().split();
@@ -448,6 +439,7 @@ class CommodityManagement extends React.Component<IProps, IState>  {
                             onChange={this.handleCategoryChange}
                             allowClear={false}
                             style={{ width: 324 }}
+                            placeholder={'请选择类目名称'}
                             fieldNames={{ label: 'categoryName', value: 'categoryId' }}/>
                         <div className="title-input">
                             <SelectPlatform handleSelectChange={this.handlePlatformChange} distributionState={searchData.distributionState}></SelectPlatform>

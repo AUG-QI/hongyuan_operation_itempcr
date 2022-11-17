@@ -1,6 +1,8 @@
 // @ts-ignore
 import React, { ChangeEvent } from 'react';
-import { Button, Checkbox, message, Modal, Pagination, Spin } from 'antd';
+import {
+    Button, Checkbox, message, Modal, Pagination, Spin
+} from 'antd';
 import { ContainerOutlined } from '@ant-design/icons';
 import './index.scss';
 import axios from '../../services/axios';
@@ -135,10 +137,9 @@ class FooterPage extends React.Component<IProps, IState>  {
                     this.setState({ spinning: false });
                     filetUploadCallback && filetUploadCallback('error');
                     return;
-                } else {
-                    message.success('上传成功');
-                    filetUploadCallback && filetUploadCallback('success');
                 }
+                message.success('上传成功');
+                filetUploadCallback && filetUploadCallback('success');
                 event.target.value = '';
                 this.setState({ uploadFileDialogVisible: false, spinning: false });
             })

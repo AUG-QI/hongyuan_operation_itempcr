@@ -47,6 +47,6 @@ export const getUserData = async () => {
         if (!resUserInfo.nick) {
             location.hash = '/login';
         }
-        await setUserInfo(resUserInfo);
+        setUserInfo(resUserInfo);
     }
 };

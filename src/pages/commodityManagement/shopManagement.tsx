@@ -1,20 +1,25 @@
-import { message, Space, Table } from 'antd';
+import { message, Modal, Select, Space, Table } from 'antd';
 import { TableRowSelection } from 'antd/lib/table/interface';
 import React, { ChangeEvent } from 'react';
 import { Link } from 'react-router-dom';
 import { ItemsTableList } from './index';
 import FooterPage from '../../components/footerPage';
 import SearchInput from '../../components/searchInput';
-import SelectPlatform, { IMG_NAME, PLATFORM_IMG } from '../../components/selectPlatform';
+import { IMG_NAME, PLATFORM_IMG, PLATFORM_OPTIONS } from '../../components/selectPlatform';
 import { isEmpty, transformationObject, UrlData } from '../../services/utils';
 import { deleteRelation, reqSearchCommodity, reqSearchDistributorList, saveItemRemovedLog } from './api';
+import { searchItemRemovedLog } from '../operationLog/api';
+import './index.scss';
 
+const { Option } = Select;
 interface IProps {
 }
 
-const PLATFORM: any = {
+export const PLATFORM: any = {
     doudian: 'dy',
     youzan: 'yz',
+    kuai: 'ks',
+    shipinhao: 'videoShop',
 };
 
 /** 搜索值 */
@@ -62,6 +67,8 @@ interface IState {
     titleData: TitleData;
     /** 删除列表 */
     deleteList: DeleteList[];
+    operationTimeDialogVisible: boolean;
+    operationTimeList: any;
 }
 
 /** 分销商列表页面 */
@@ -91,6 +98,8 @@ class ShopManagement extends React.Component<IProps, IState> {
                 pageSize: 20,
             },
             deleteList: [],
+            operationTimeDialogVisible: false,
+            operationTimeList: [],
         };
     }
     async componentDidMount () {
@@ -154,7 +163,41 @@ class ShopManagement extends React.Component<IProps, IState> {
                     </Space>
                 ),
             },
+            {
+                title: '操作时间',
+                dataIndex: 'time',
+                align: 'center',
+                fixed: 'right',
+                render: (name: any, record: any) => (
+                    <Space size="middle">
+                        <a onClick={this.checkOperationTimeDialog.bind(this, record)}>查看操作时间</a>
+                    </Space>
+                ),
+            },
         ];
+    }
+    /**
+     * 查看操作时间弹框
+     * @param record
+     * @returns
+     */
+    checkOperationTimeDialog = async (record: any) => {
+        if (record === false) {
+            this.setState({ operationTimeDialogVisible: false });
+            return;
+        }
+        this.setState({ operationTimeDialogVisible: true });
+        const data = {
+            platformName: record.shop_type,
+            biyaoItemId: record.origin_num_iid,
+            distributorId: record.user_id,
+            distributorShopName: record.shop_name,
+        };
+        const res: any = await searchItemRemovedLog(data);
+        if (!res || res.count === 0) {
+            return;
+        }
+        this.setState({ operationTimeList: res.data });
     }
     /**
      * 下架商品
@@ -170,7 +213,7 @@ class ShopManagement extends React.Component<IProps, IState> {
             origin_num_iid,
         };
         const res: any = await deleteRelation(data);
-        const logData = {
+        const logData: any = {
             platformName: shop_type,
             biyaoItemId: titleData.itemId,
             biyaoItemName: titleData.itemTitle,
@@ -178,14 +221,19 @@ class ShopManagement extends React.Component<IProps, IState> {
             distributorShopName: shop_name,
             operationAccount: userInfo.account,
         };
-        // 保存操作日志
-        this.saveDeleteRelationLog([logData]);
+
         if (!res.is_success) {
             message.error(res.error_msg);
-            return;
+            logData.operationResult = 0;
+            logData.operationResultDetail = res.error_msg;
+        } else {
+            message.success('下架成功');
+            this.hadleAllSearch();
+            logData.operationResult = 1;
+            logData.operationResultDetail = '下架成功';
         }
-        message.success('下架成功');
-        this.hadleAllSearch();
+        // 保存操作日志
+        this.saveDeleteRelationLog([logData]);
     }
     /**
      * 保存操作日志
@@ -201,13 +249,7 @@ class ShopManagement extends React.Component<IProps, IState> {
     changeTableSelectedState = (val: any, list: any) => {
         const { rowSelection, itemTableList } = this.state;
         rowSelection.selectedRowKeys = val;
-        const deleteList: DeleteList[] = list.map((item: any) => {
-            return {
-                shop_id: item.shop_id,
-                num_iid: item.num_iid,
-                origin_num_iid: item.origin_num_iid,
-            };
-        });
+        const deleteList: DeleteList[] = list;
         const isAllValue = val.length === itemTableList.length;
         this.setState({ isAllValue, deleteList, rowSelection });
     };
@@ -222,13 +264,7 @@ class ShopManagement extends React.Component<IProps, IState> {
             rowSelection.selectedRowKeys = [];
         } else {
             rowSelection.selectedRowKeys = itemTableList.map((item: any) => item.relation_id);
-            deleteList = itemTableList.map((item: any) => {
-                return {
-                    shop_id: item.shop_id,
-                    num_iid: item.num_iid,
-                    origin_num_iid: item.origin_num_iid,
-                };
-            });
+            deleteList = itemTableList;
         }
         this.setState({ isAllValue: val, rowSelection, deleteList });
     };
@@ -258,27 +294,44 @@ class ShopManagement extends React.Component<IProps, IState> {
      */
     handelOperationBtn = async (val: string) => {
         const { deleteList, titleData } = this.state;
-        // @ts-ignore
-        const userInfo = JSON.parse(sessionStorage.getItem('userInfo')) || {};
+        const userInfoJson: any = sessionStorage.getItem('userInfo');
+        const userInfo: any = JSON.parse(userInfoJson) || {};
         if (!deleteList.length) {
             message.warning('请先选择平台');
             return;
         }
+        const deleteKeyList = deleteList.map((item: any) => {
+            return {
+                shop_id: item.shop_id,
+                num_iid: item.num_iid,
+                origin_num_iid: item.origin_num_iid,
+            };
+        });
         if (val === 'takenDown') {
             // 请求大集合
-            const allRequests: any = deleteList.map((item) => {
+            const allRequests: any = deleteKeyList.map((item) => {
                 return deleteRelation(item);
             });
             const updateRes = await Promise.all(allRequests);
-            const saveLogData = updateRes.map(item => {
-                return {
-                    platformName: item.shop_type,
+            const saveLogData: any = [];
+            updateRes.forEach((item, index) => {
+                const key: any = deleteList[index];
+                const data: any = {
+                    platformName: key.shop_type,
                     biyaoItemId: titleData.itemId,
                     biyaoItemName: titleData.itemTitle,
-                    distributorId: item.user_id,
-                    distributorShopName: item.shop_name,
+                    distributorId: key.user_id,
+                    distributorShopName: key.shop_name,
                     operationAccount: userInfo.account,
                 };
+                if (!item.is_success) {
+                    data.operationResult = 0;
+                    data.operationResultDetail = item.error_msg;
+                } else {
+                    data.operationResult = 1;
+                    data.operationResultDetail = '下架成功';
+                }
+                saveLogData.push(data);
             });
             const isSuccess = updateRes.every(item => item.is_success);
             if (isSuccess) {
@@ -339,7 +392,7 @@ class ShopManagement extends React.Component<IProps, IState> {
         this.setState({ itemTableList: items, isAllValue: false, rowSelection: { ...rowSelection, selectedRowKeys: [], deleteList: [] } });
     }
     render (): React.ReactNode {
-        const { rowSelection, isAllValue, itemTableList, titleData, secarchInfo } = this.state;
+        const { rowSelection, isAllValue, itemTableList, titleData, secarchInfo, operationTimeDialogVisible, operationTimeList } = this.state;
         return (
             <div className="shop-management">
                 <div className="shop-management-title commodity-location">
@@ -358,11 +411,30 @@ class ShopManagement extends React.Component<IProps, IState> {
                                 {'< 商品管理'}
                             </Link>
                             <div className="suppliers-input">
-                                <SelectPlatform
-                                    handleSelectChange={this.handleSelectChange}
-                                    from='distributors'
-                                    distributionState={secarchInfo.shopType}
-                                ></SelectPlatform>
+                                <Select
+                                    value={secarchInfo.shopType}
+                                    onChange={this.handleSelectChange}
+                                    style={{ width: 200 }}
+                                    showArrow={true}
+                                    notFoundContent='暂无搜索内容'
+                                >
+                                    {PLATFORM_OPTIONS.map((item) => {
+                                        return (
+                                            <Option
+                                                key={item.value}
+                                                value={item.value}
+                                                label={item.label}
+                                            >
+                                                <div className='demo-option-label-item'>
+                                                    <span role='img' aria-label="China" className='option-items-img'>
+                                                        <img src={PLATFORM_IMG[item.value]} alt='' />
+                                                    </span>
+                                                    {item.label}
+                                                </div>
+                                            </Option>
+                                        );
+                                    })}
+                                </Select>
                                 <SearchInput
                                     handleInputSearch={this.handleInputSearch}
                                     from="distributors"
@@ -378,9 +450,7 @@ class ShopManagement extends React.Component<IProps, IState> {
                                 dataSource={itemTableList}
                                 rowSelection={rowSelection}
                                 pagination={false}
-                                scroll={{
-                                    y: 1000,
-                                }}
+                                scroll={{ y: 1000 }}
                                 align='center'
                                 rowKey='relation_id'
                                 ellipsis
@@ -398,6 +468,22 @@ class ShopManagement extends React.Component<IProps, IState> {
                         pageNo={secarchInfo.pageNo}
                     ></FooterPage>
                 </div>
+                <Modal key='operationTimeDialog' title="查看操作时间" open={operationTimeDialogVisible} onCancel={this.checkOperationTimeDialog.bind(this, false)} footer={null} className='upload-info-dialog'>
+                    <div className='ant-upload' >
+                        <div className='operation-info'>
+                            <span>操作人</span>
+                            <span>操作结果</span>
+                            <span>操作时间</span>
+                        </div>
+                        {
+                            operationTimeList.length ? operationTimeList.map((item: any, index: number) => {
+                                return <div key={index} className='operation-info'>
+                                    <span>{item.operationAccount}</span> <span>{item.operationResultDetail}</span><span>{item.removedTime}</span>
+                                </div>;
+                            }) : <div>暂无操作时间</div>
+                        }
+                    </div>
+                </Modal>
             </div>
         );
     }

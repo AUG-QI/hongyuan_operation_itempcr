@@ -1,6 +1,6 @@
 import React, { ChangeEvent } from 'react';
 import {
-    Alert, Button, Input, InputNumber, message, Modal, Spin, Tree
+    Alert, Button, InputNumber, message, Modal, Spin, Tree
 } from 'antd';
 import { delStockWarningInfo, getBasicStockValue, getCategoryOptions, updateStockWarningInfo } from '../commodityManagement/api';
 import './index.scss';

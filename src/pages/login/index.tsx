@@ -7,8 +7,9 @@ import './index.scss';
 const LoginPage = () => {
     const navigate = useNavigate();
     /** 登陆成功 */
-    const onLoginSuccessed = async (res: any) => {
+    const onLoginSuccessed = async () => {
         await getUserData();
+        // location.replace('https://biyao.aiyongtech.com');
         navigate('/commodityManagement');
     };
 

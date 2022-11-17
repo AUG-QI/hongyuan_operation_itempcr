@@ -11,8 +11,8 @@
     &-content {
         margin: 20px;
         border-radius: 20px;
+        overflow: hidden;
         .ant-table {
-            //padding: 0 10px;
             border-radius: 10px;
             overflow: hidden;
             
@@ -62,7 +62,8 @@
     .distribution-state {
         display: flex;
         flex-wrap: wrap;
-        justify-content: center;
+        justify-content: flex-start;
+        margin-left: 18px;
         img {
             width: 22px;
             height: 22px;
@@ -105,12 +106,6 @@
     min-width: 200px !important;
 }
 .shop-management {
-    // margin: ;
-    // border-radius: 10px;
-    // overflow: hidden;
-    .ant-table-wrapper {
-        margin-bottom: 100px;
-    }
     &-title {
         height: 80px;
         background: #fff;
@@ -179,7 +174,8 @@
         margin: 20px;
         border-radius: 8px;
         .ant-table-body {
-            height: calc(100vh - 365px) !important;  
+            height: calc(100vh - 365px) !important;
+            max-height: 440px;
         }
     }
     
@@ -196,11 +192,19 @@
     }
     .ant-table-body {
         height: calc(100vh - 306px );
+        max-height: 440px;
     }
-    // .ant-table-cell:last-child {
-    //     td {
-    //         border-bottom: none;
-    //     }
-    //     // border-bottom: none;
-    // }
+}
+.ant-modal-body {
+    .ant-upload {
+        max-height: 400px;
+        overflow: auto;
+        .operation-info {
+            display: flex;
+            justify-content: space-between;
+            span {
+                width: 150px;
+            }
+        }
+    }
 }
