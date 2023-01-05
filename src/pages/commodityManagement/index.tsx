@@ -94,8 +94,8 @@ class CommodityManagement extends React.Component<IProps, IState>  {
         const searchDataJson = sessionStorage.getItem('commoditySearchData');
         if (searchDataJson) {
             const categoryoptions: any = await getCategoryOptions();
-            const searchData = JSON.parse(searchDataJson);
-            this.setState({ searchData, categoryInfo: searchData.categoryInfo, categoryoptions }, () => {
+            // const searchData = JSON.parse(searchDataJson);
+            this.setState({  categoryoptions }, () => {
                 this.handleSearch();
             });
             return;
@@ -303,7 +303,16 @@ class CommodityManagement extends React.Component<IProps, IState>  {
         };
         // 处理搜索数据 - 如果是所有平台就不用传了
         if (searchData.distributionState[0] !== 'all') {
-            reqData.distributionState = searchData.distributionState;
+            // reqData.distributionState = searchData.distributionState;
+            if ((searchData.distributionState[0].includes('Gray'))) {
+                reqData.distributionState = searchData.distributionState.map((item: any)  => {
+                    const text = item.replaceAll('Gray', '');
+                    return text;
+                });
+            } else {
+                reqData.distributionType = 'pass';
+                reqData.distributionState = searchData.distributionState;
+            }
         }
         // 处理一下input是搜索id还是关键词
         const inputVal = searchData.inputVal.trim();
@@ -311,6 +320,9 @@ class CommodityManagement extends React.Component<IProps, IState>  {
             reqData.spuId = inputVal;
         } else if (inputVal) {
             reqData.productName = searchData.inputVal;
+        }
+        if (searchData.distributionType) {
+            reqData.distributionType = searchData.distributionType;
         }
         const { list, total } = await reqSearchCommodity(reqData);
         // 整理成能传入tablelist的文件 itemTableList

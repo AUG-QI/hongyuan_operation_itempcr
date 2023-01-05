@@ -63,14 +63,17 @@ class DistributionFailure extends React.Component<IProps, IState> {
      */
     onSearch = (val: any, type: string) => {
         eventEmiter.emit(val, type);
-        const searchVal = val;
-        const updataInfo = { searchVal };
+        const searchValJson = JSON.stringify(val);
+        const searchVal = JSON.parse(searchValJson);
         // 处理一下没有时间的情况
         if (type === 'reset' || !val.month) {
             const { formateDate } = getSpecifiedTime('month');
             searchVal.month = formateDate;
         }
-        this.setState(updataInfo, () => {
+        if (searchVal.shop_type === 'all') {
+            delete searchVal.shop_type;
+        }
+        this.setState({ searchVal }, () => {
             this.hanldeSearch();
         });
     }

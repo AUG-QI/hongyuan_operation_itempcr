@@ -1,0 +1,34 @@
+.address-tool-render {
+    .log-table {
+        height: 100%;
+    }
+    .ant-table-body {
+        min-height: calc(100vh - 335px) !important;
+    }
+    .ant-pagination {
+        margin: 0 !important;
+        margin-top: 20px !important;
+    }
+    
+}
+.inputs-box {
+    .input-item {
+        display: flex;
+        align-items: center;
+        .item-label {
+            width: 100px;
+            text-align: right;
+            margin-right: 10px;
+        }
+    }
+
+
+}
+.address-tool-dialog {
+    .ant-select-selector {
+        padding: 0 !important;
+    }
+    .ant-select-selection-search {
+        margin: 0 !important;
+    }
+}

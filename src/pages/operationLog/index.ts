@@ -1,4 +1,4 @@
-import moment from "_moment@2.29.4@moment";
+import moment from "moment";
 import { failTypeRender } from "../abnormalPurchaseOrderList";
 import { compileFeishuGroup } from "../feishuRobotManagementLog/robotList";
 import { shopTypeRender } from "./component/logSearch";
@@ -346,6 +346,10 @@ export const OPERATION_LOG_DATA =  {
             title: '商家ID',
             key: 'purchaseId',
         },
+        {
+            title: '错误原因',
+            key: 'errorCause',
+        },
     ],
     /** 商家订单失败日志表格数据 */
     MERCHANT_ORDER_FAILURE_TABLE_ALL_LIST: [
@@ -472,6 +476,14 @@ export const OPERATION_LOG_DATA =  {
         {
             title: '平台受理单编号',
             key: 'platformReferenceNum',
+        },
+        {
+            title: '错误原因',
+            key: 'errorCause',
+        },
+        {
+            title: '操作动作',
+            key: 'operationalMotion',
         },
         {
             title: '操作时间',
@@ -727,6 +739,10 @@ export const OPERATION_LOG_DATA =  {
             title: '电商平台名',
             key: 'storeId',
         },
+        {
+            title: '取消原因',
+            key: 'cancellationReason',
+        },
     ],
     /** 取消采购日志列表数据 */
     CANCEL_PURCHASE_TABLE_ALL_LIST: [
@@ -807,6 +823,10 @@ export const OPERATION_LOG_DATA =  {
         {
             title: '分销商店铺名',
             key: 'distributorShopName',
+        },
+        {
+            title: '错误信息',
+            key: 'errorCause',
         },
         {
             title: '事件发生时间',
@@ -1190,6 +1210,53 @@ export const OPERATION_LOG_DATA =  {
             dataIndex: 'operationIp',
             key: 'operationIp',
             width: 180,
+        },
+    ],
+    /** 库存操作日志搜索 */
+    INVENTORY_OPERATION_LOG_SEARCH_LIST: [
+        {
+            title: '操作类型',
+            key: 'operationType',
+        },
+        {
+            title: '操作时间',
+            key: 'time',
+        },
+        {
+            title: '类目名称',
+            key: 'thirdCategory',
+        },
+    ],
+    INVENTORY_OPERATION_LOG_TABLE_ALL_LIST: [
+        {
+            title: '操作账号',
+            dataIndex: 'operationAccount',
+            key: 'operationAccount',
+            width: 150,
+        },
+        {
+            title: '操作时间',
+            dataIndex: 'operationTime',
+            key: 'operationTime',
+            width: 150,
+        },
+        {
+            title: '操作类目',
+            dataIndex: 'thirdCategory',
+            key: 'thirdCategory',
+            width: 150,
+        },
+        {
+            title: '操作类型',
+            dataIndex: 'operationType',
+            key: 'operationType',
+            width: 150,
+        },
+        {
+            title: '操作内容',
+            dataIndex: 'operationContent',
+            key: 'operationContent',
+            width: 150,
         },
     ],
 };

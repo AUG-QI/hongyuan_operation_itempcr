@@ -6,9 +6,10 @@ import {
     HomeOutlined,
     FileTextOutlined,
     ExceptionOutlined,
-    TeamOutlined
+    TeamOutlined,
+    ToolOutlined
 } from '@ant-design/icons';
-import { Button, Menu } from 'antd';
+import { Button, Menu, Modal } from 'antd';
 import './index.scss';
 
 
@@ -32,6 +33,7 @@ const ITEMS = [
             { label: '库存同步日志', key: '/inventorySynchronization' },
             { label: '管控下架日志', key: '/controlsShelves' },
             { label: '取消代销日志', key: '/cancelInsteadSales' },
+            { label: '库存操作日志', key: '/inventoryOperation' },
             { label: '商家订单失败日志', key: '/MerchantOrderFailure' },
             { label: '售后日志', key: '/afterSales' },
             { label: '采购单异常日志', key: '/abnormalPurchaseOrder' },
@@ -53,12 +55,31 @@ const ITEMS = [
             { label: '修改日志', key: '/modifyLog' },
         ],
     },
+    {
+        label: '工具',
+        key: '/tool',
+        icon: <ToolOutlined />,
+        children: [
+            { label: '属性工具', key: '/mapTool' },
+            { label: '值域工具', key: '/domainTool' },
+            { label: '地址工具', key: '/addressTool' },
+        ],
+    },
     false && {
         label: 'demo',
         key: '/erqiDemo',
         icon: <ExceptionOutlined />,
     },
 ];
+// const retentionDialog = (text, handleOk, handleCancel) => {
+//     console.log(text, '???');
+    
+//     return <Modal title="Basic Modal" open={true}>
+//     <p>{text}</p>
+//     <p>Some contents...</p>
+//     <p>Some contents...</p>
+//   </Modal>
+// }
 interface IState {
     /** 侧边栏收缩框 */
     collapsed: boolean;
@@ -80,7 +101,32 @@ class HomePageSider extends React.Component<{pathname: string}, IState> {
         });
     }
     clickSider = ({ key }: any): void => {
-        sessionStorage.removeItem('commoditySearchData');
+        // 删除搜索参数
+        const searchDataJson = sessionStorage.getItem('commoditySearchData');
+        if (searchDataJson) {
+            sessionStorage.removeItem('commoditySearchData');
+        }
+        // 查看工具设置保存
+        const editStatus = sessionStorage.getItem('editorStatus');
+        if (editStatus === '1') {
+            // 挽留弹框
+            // retentionDialog('保存', ()=> {}, ()=> {});
+            Modal.confirm({
+                title: '温馨提示',
+                content: (
+                    <div>
+                        <p>当前编辑内容暂未保存</p>
+                    </div>
+                ),
+                okText: '继续跳转',
+                cancelText: '我知道了',
+                onOk: () => {
+                    location.hash = `${key}`;
+                    sessionStorage.removeItem('editorStatus');
+                },
+            });
+            return;
+        }
         location.hash = `${key}`;
     }
     toggleCollapsed = () => {
@@ -101,7 +147,7 @@ class HomePageSider extends React.Component<{pathname: string}, IState> {
                     selectedKeys={[pathname]}
                     className="sider-menu"
                     onClick={this.clickSider}
-                    style={{ width: collapsed ? '80px' : '200px' }}
+                    style={{ width: collapsed ? '80px' : '200px', overflow: 'auto' }}
                 />
                 <Button
                     type="primary"

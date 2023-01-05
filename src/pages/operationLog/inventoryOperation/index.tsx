@@ -1,9 +1,9 @@
 import React from 'react';
-import { getSpecifiedTime, OPERATION_LOG_DATA } from '.';
-import { getDelRelationLog } from './api';
-import LogPaging from './component/logPaging';
-import LogSearch from './component/logSearch';
-import LogTable from './component/logTable';
+import { getSpecifiedTime, OPERATION_LOG_DATA } from '..';
+import { getBiyaoInventoryOperationLog } from '../../../../api/operationLogApi';
+import LogPaging from '../component/logPaging';
+import LogSearch from '../component/logSearch';
+import LogTable from '../component/logTable';
 
 interface IProps {}
 interface IState {
@@ -14,8 +14,8 @@ interface IState {
     loading: boolean;
 }
 
-/** 取消代销日志 */
-class CancelInsteadSales extends React.Component<IProps, IState> {
+/** 库存操作日志页面 */
+class InventoryOperation extends React.Component<IProps, IState> {
     constructor (props: IProps) {
         super(props);
         this.state = {
@@ -32,7 +32,7 @@ class CancelInsteadSales extends React.Component<IProps, IState> {
         const { searchVal } = this.state;
         const { momentTime, formateDate } = getSpecifiedTime('30');
         // 这里目前字段只能写死了
-        this.setState({ searchVal: { ...searchVal, time: formateDate  }, defaultMomentValue: momentTime }, () => {
+        this.setState({ searchVal: { ...searchVal, time: formateDate }, defaultMomentValue: momentTime }, () => {
             this.hanldeSearch();
         });
     }
@@ -40,11 +40,7 @@ class CancelInsteadSales extends React.Component<IProps, IState> {
      * 点击搜索
      */
     onSearch = (val: any, type: string) => {
-        const searchValJson = JSON.stringify(val);
-        const searchVal = JSON.parse(searchValJson);
-        if (searchVal.shop_type === 'all') {
-            delete searchVal.shop_type;
-        }
+        const searchVal = val;
         // 处理一下没有时间的情况
         if (type === 'reset' || !val.time) {
             const { formateDate } = getSpecifiedTime('30');
@@ -54,12 +50,7 @@ class CancelInsteadSales extends React.Component<IProps, IState> {
             this.hanldeSearch();
         });
     }
-    /**
-     * 数组转字符串
-     */
-    arrayConversionString = (array: string[]) => {
-        return array.join(',');
-    }
+
 
     /**
      * 改变每页条数
@@ -78,32 +69,28 @@ class CancelInsteadSales extends React.Component<IProps, IState> {
      */
     hanldeSearch = async () => {
         const { searchVal } = this.state;
-        // 处理一下搜索参数里面的页码
+        // 处理一下时间传入格式
         const searchDataJson = JSON.stringify(searchVal);
         const searchData = JSON.parse(searchDataJson);
-        // 处理一下参数
-        if (searchVal.pageNo) {
-            searchData.page_no = searchVal.pageNo;
-            delete searchData.pageNo;
-        }
-        if (searchVal.pageSize) {
-            searchData.page_size = searchVal.pageSize;
-            delete searchData.pageSize;
-        }
         if (searchVal.time) {
-            searchData.time = this.arrayConversionString(searchVal.time);
+            searchData.startTime = searchVal.time[0];
+            searchData.endTime = searchVal.time[1];
+            delete searchData.time;
         }
-        const res: any = await getDelRelationLog(searchData);
-        this.setState({ tableData: res.items, total: res.total_amount, loading: false });
+        const res: any = await getBiyaoInventoryOperationLog(searchData);
+        if (!res) {
+            this.setState({ loading: false });
+        }
+        this.setState({ tableData: res.data, total: res.count, loading: false });
     }
     render (): React.ReactNode {
         const { searchVal, total, tableData, defaultMomentValue, loading } = this.state;
-        return <div className="inventory-synchronization">
-            <LogSearch defaultMomentValue={defaultMomentValue}  searchKeyList={OPERATION_LOG_DATA.CANCEL_INSTEAD_SALES_SEARCH_LIST} onSearch={this.onSearch}></LogSearch>
-            <LogTable rowKey='log_id' loading={loading} tableData={tableData} tableTitle={OPERATION_LOG_DATA.CANCEL_INSTEAD_SALES_TABLE_ALL_LIST}></LogTable>
+        return <div className="abnormal-purchase-order">
+            <LogSearch defaultMomentValue={defaultMomentValue}  searchKeyList={OPERATION_LOG_DATA.INVENTORY_OPERATION_LOG_SEARCH_LIST} onSearch={this.onSearch}></LogSearch>
+            <LogTable loading={loading} rowKey='id' tableData={tableData} tableTitle={OPERATION_LOG_DATA.INVENTORY_OPERATION_LOG_TABLE_ALL_LIST}></LogTable>
             <LogPaging total={total} changePage={this.changePage} pageNo={searchVal.pageNo || 1}></LogPaging>
         </div>;
     }
 }
 
-export default CancelInsteadSales;
+export default InventoryOperation;

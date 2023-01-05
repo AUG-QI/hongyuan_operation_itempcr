@@ -102,7 +102,10 @@ class RobotList extends React.Component<IProps, IState> {
         const searchData = JSON.parse(searchDataJson);
         searchData.isDelete = !!storeStatus;
         const res: any = await getRobotConfigurationList(searchData);
-        this.setState({ tableData: res.operationLogConfigList, total: res.total, loading: false });
+        const tableData = res.operationLogConfigList?.map((item: any, index: number) => {
+            return { ...item, index };
+        }) || [];
+        this.setState({ tableData, total: res.total, loading: false });
     }
     switchStoreGroup = () => {
         const { storeStatus } = this.state;
@@ -161,7 +164,7 @@ class RobotList extends React.Component<IProps, IState> {
             <LogSearch
             // @ts-ignore
                 ref={this.Child} searchKeyList={searchKeyList} onSearch={this.onSearch}></LogSearch>
-            <LogTable rowKey='id' loading={loading} tableData={tableData} tableTitle={tableTitle}></LogTable>
+            <LogTable rowKey='index' loading={loading} tableData={tableData} tableTitle={tableTitle}></LogTable>
             <LogPaging total={total} changePage={this.changePage} pageNo={searchVal.pageNo || 1}></LogPaging>
             {/* <div className="log-paging" >
                 <ConfigProvider locale={zh_CN}>

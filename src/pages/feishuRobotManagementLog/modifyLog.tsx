@@ -155,13 +155,16 @@ class ModifyLog extends React.Component<IProps, IState> {
             delete searchData.time;
         }
         const res: any = await feishuUpdateLog(searchData);
-        this.setState({ tableData: res.operationLogConfigUpdateLogList, total: res.total, loading: false });
+        const tableData = res.operationLogConfigUpdateLogList?.map((item: any, index: number) => {
+            return { ...item, index };
+        }) || [];
+        this.setState({ tableData, total: res.total, loading: false });
     }
     render (): React.ReactNode {
         const { defaultMomentValue, tableData, total, searchVal, loading  } = this.state;
         return <div className='feishu-robot-modify-log'>
             <LogSearch defaultMomentValue={defaultMomentValue} searchKeyList={OPERATION_LOG_DATA.FEISHU_ROBOT_MANAGEMENT_MODIFY_SEARCH_LIST} onSearch={this.onSearch}></LogSearch>
-            <LogTable rowKey='id' loading={loading} tableData={tableData} tableTitle={OPERATION_LOG_DATA.FEISHU_ROBOT_MANAGEMENT_MODIFY_TABLE_ALL_LIST}></LogTable>
+            <LogTable rowKey='index' loading={loading} tableData={tableData} tableTitle={OPERATION_LOG_DATA.FEISHU_ROBOT_MANAGEMENT_MODIFY_TABLE_ALL_LIST}></LogTable>
             <LogPaging total={total} changePage={this.changePage} pageNo={searchVal.pageNo || 1}></LogPaging>
             {/* <div className="log-paging" >
                 <ConfigProvider locale={zh_CN}>

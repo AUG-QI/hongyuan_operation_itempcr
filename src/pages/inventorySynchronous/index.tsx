@@ -4,6 +4,7 @@ import {
 } from 'antd';
 import { delStockWarningInfo, getBasicStockValue, getCategoryOptions, updateStockWarningInfo } from '../commodityManagement/api';
 import './index.scss';
+import { updateBiyaoInventoryOperationLog } from '../../../api/operationLogApi';
 
 /** 特殊预警标题数据 */
 const SPECIAL_STOCK_TITLE_DATA: string[] = [
@@ -44,6 +45,31 @@ interface CheckInput {
     /** 返回信息 */
     message: string;
 }
+
+/**
+ * 获取类目id
+ * @param arr
+ * @param alertValue
+ * @param upValue
+ * @returns
+ */
+export const getID = (arr: any, alertValue: string | number, upValue: string | number) => {
+    const data: any = [];
+    arr.forEach((item: any) => {
+        if (item.children) {
+            getID(item.children, alertValue, upValue);
+        } else {
+            data.push({
+                name: item.categoryName,
+                cid: item.categoryId,
+                prewarningValue: alertValue,
+                restoreValue: upValue,
+            });
+        }
+    });
+    return data;
+};
+
 /** 库存同步页面 */
 class InventorySynchronous extends React.Component<{}, IState> {
     constructor (props: {}) {
@@ -103,7 +129,7 @@ class InventorySynchronous extends React.Component<{}, IState> {
      */
     handleOk = async () => {
         const { selectData = [], alertValue, upValue } = this.state;
-        if (!selectData.length || !alertValue.trim() || !upValue.trim()) return message.warning('请输入完整');
+        if (!selectData.length || !alertValue || !upValue) return message.warning('请输入完整');
         if (!numberRegular.test(alertValue) || !numberRegular.test(upValue)) return message.warning('输入框需要纯数字');
         const res = await updateStockWarningInfo(selectData);
         if (res == 'success') {
@@ -111,6 +137,7 @@ class InventorySynchronous extends React.Component<{}, IState> {
         } else {
             message.error('保存失败');
         }
+        // await updateBiyaoInventoryOperationLog(selectData);
         this.init();
         this.setState({ isModalOpen: false, selectData: [],  alertValue: '', upValue: '', checkedKeys: [] });
     };
@@ -261,8 +288,8 @@ class InventorySynchronous extends React.Component<{}, IState> {
         return (
             <div className="check-special-stock-dialog">
                 <div className="special-stock-title stock-bg">
-                    {SPECIAL_STOCK_TITLE_DATA.map((item) => {
-                        return <span key={item}>{item}</span>;
+                    {SPECIAL_STOCK_TITLE_DATA.map((item, index) => {
+                        return <span key={index}>{item}</span>;
                     })}
                 </div>
                 <div className="special-stock-info">
@@ -292,7 +319,7 @@ class InventorySynchronous extends React.Component<{}, IState> {
             <div>
                 {inventoryCategoryData.map((item: any) => {
                     return (
-                        <div key={item.cid} className="special-stock-title">
+                        <div key={item.id} className="special-stock-title">
                             <span>{item.name}</span>
                             <span>
                                 <InputNumber controls={false}
@@ -336,31 +363,8 @@ class InventorySynchronous extends React.Component<{}, IState> {
      */
     onCheck = (checkedKeys: string[], event: any) => {
         const {  alertValue, upValue } = this.state;
-        const selectData = this.getID(event.checkedNodes, alertValue, upValue);
+        const selectData = getID(event.checkedNodes, alertValue, upValue);
         this.setState({ selectData, checkedKeys });
-    }
-    /**
-     * 获取类目id
-     * @param arr
-     * @param alertValue
-     * @param upValue
-     * @returns
-     */
-    getID = (arr: any, alertValue: string | number, upValue: string | number) => {
-        const data: any = [];
-        arr.forEach((item: any) => {
-            if (item.children) {
-                this.getID(item.children, alertValue, upValue);
-            } else {
-                data.push({
-                    name: item.categoryName,
-                    cid: item.categoryId,
-                    prewarningValue: alertValue,
-                    restoreValue: upValue,
-                });
-            }
-        });
-        return data;
     }
     treeTransferRender = () => {
         const { selectData, checkedKeys, treeData } = this.state;
@@ -410,11 +414,22 @@ class InventorySynchronous extends React.Component<{}, IState> {
             name: '基础类目属性',
         }];
         const res = await updateStockWarningInfo(basicStock);
+        let operationResult = 1;
+        let operationResultDetail = '操作成功';
         if (res === 'success') {
             message.success('保存成功');
         } else {
             message.error('保存失败');
+            operationResult = 0;
+            operationResultDetail = 'res';
         }
+        // await updateBiyaoInventoryOperationLog([{
+        //     operationContent: `设置, 预警值：${restoreValue}，上升值：${prewarningValue}`,
+        //     operationType: '设置',
+        //     operationResult,
+        //     operationResultDetail,
+        //     thirdCategory: '基础库存',
+        // }]);
         // 特殊类目保存
         this.setState({ checkSpecialStockDialogVisible: false, selectData: [], checkedKeys: [],  alertValue: '', upValue: '' });
     }

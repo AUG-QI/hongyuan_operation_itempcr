@@ -1,5 +1,5 @@
 import { message } from 'antd';
-import moment from '_moment@2.29.4@moment';
+import moment from 'moment';
 import axios from '../../services/axios';
 import config from '../../config';
 
@@ -280,8 +280,8 @@ export const exportItemData = (params: ExportItemParams) => {
 
 /**
  * 保存下架日志
- * @param params 
- * @returns 
+ * @param params
+ * @returns
  */
 export const saveItemRemovedLog = (params: any) => {
     return new Promise((resolve, reject) => {

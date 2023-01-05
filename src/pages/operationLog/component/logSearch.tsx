@@ -5,8 +5,8 @@ import {
 } from 'antd';
 import zh_CN from 'antd/es/locale/zh_CN';
 import 'moment/dist/locale/zh-cn';
+import moment from 'moment';
 import '../index.scss';
-import moment from '_moment@2.29.4@moment';
 
 const { Option } = Select;
 const { RangePicker } = DatePicker;
@@ -51,6 +51,16 @@ const orderFailureType: any = [
         label: '确认收货失败',
     },
 ];
+const operationType = [
+    {
+        value: '设置',
+        label: '设置',
+    },
+    {
+        value: '删除',
+        label: '删除',
+    },
+];
 //     0: '转生产失败',
 //     1: 'ERP发货失败',
 //     2: '电商平台发货失败'
@@ -64,7 +74,7 @@ const storeIdType: any = {
 };
 
 // 还要转换成给中台的数据 我真的会谢
-const storeId_params: any = {
+export const storeId_params: any = {
     dy: 'DOUDIAN',
     yz: 'YOUZAN',
     ks: 'KWAISHOP',
@@ -78,6 +88,25 @@ const associated = [
     {
         value: true,
         label: '关联',
+    },
+];
+/** 操作动作 */
+const operationalMotion = [
+    {
+        value: '创建受理单',
+        label: '创建受理单',
+    },
+    {
+        value: '修改受理单',
+        label: '修改受理单',
+    },
+    {
+        value: '取消受理单',
+        label: '取消受理单',
+    },
+    {
+        value: '退货物流回寄',
+        label: '退货物流回寄',
     },
 ];
 /**
@@ -118,7 +147,7 @@ interface IState  {
 }
 const PLATFORM_OPTIONS = [
     {
-        value: 0,
+        value: 'all',
         label: '所有选项',
     },
     {
@@ -140,16 +169,16 @@ const PLATFORM_OPTIONS = [
 ];
 const exceptionReason = [
     {
-        value: 0,
+        value: '',
         label: '所有选项',
     },
     {
-        value: '支付错误',
-        label: '支付错误',
+        value: '支付失败',
+        label: '支付失败',
     },
     {
-        value: '采购错误',
-        label: '采购错误',
+        value: '采购失败',
+        label: '采购失败',
     },
 ];
 
@@ -296,7 +325,7 @@ class LogSearch extends React.Component<IProps, IState> {
                                 </div>
                             </Space>;
                             // 平台搜索
-                        } else if (item.key === 'shop_type' || item.key === 'storeId' || item.key === 'sourceStoreId' || item.key === 'platformName' || item.key === 'orderFailureType' || item.key === 'exceptionReason' || item.key === 'failType' || item.key === 'isAssociated') {
+                        } else if (item.key === 'shop_type' || item.key === 'storeId' || item.key === 'sourceStoreId' || item.key === 'platformName' || item.key === 'orderFailureType' || item.key === 'exceptionReason' || item.key === 'failType' || item.key === 'isAssociated' || item.key === 'operationalMotion' || item.key === 'operationType') {
                             // const PLATFORM_OPTIONS = item.key === 'shop_type' || item.key === 'storeId' || item.key === 'platformName';
                             // const orderFailure = item.key === 'orderFailureType';
                             let arr = [];
@@ -311,6 +340,10 @@ class LogSearch extends React.Component<IProps, IState> {
                                 arr = failTypeList;
                             } else if (item.key === 'isAssociated') {
                                 arr = associated;
+                            } else if (item.key === 'operationalMotion') {
+                                arr = operationalMotion;
+                            } else if (item.key === 'operationType') {
+                                arr = operationType;
                             }
                             return <div key={item.key} className='item-ipt' >
                                 <span className='title' style={{ marginRight: '10px' }}>{item.title}</span>

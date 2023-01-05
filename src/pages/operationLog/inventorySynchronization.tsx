@@ -38,7 +38,11 @@ class InventorySynchronization extends React.Component<IProps, IState> {
      * 点击搜索
      */
     onSearch = (val: any, type: string) => {
-        const searchVal = val;
+        const searchValJson = JSON.stringify(val);
+        const searchVal = JSON.parse(searchValJson);
+        if (searchVal.shop_type === 'all') {
+            delete searchVal.shop_type;
+        }
         // 处理一下没有时间的情况
         if (type === 'reset' || !val.time) {
             const { formateDate } = getSpecifiedTime('30');

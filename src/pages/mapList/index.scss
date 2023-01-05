@@ -1,0 +1,272 @@
+.map-Tool {
+    .search-left {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        .ant-select {
+            margin-right: 10px;
+        }
+    }
+    .table-title {
+        display: flex;
+        justify-content: space-around;
+        background-color: #fff;
+        border-bottom: 1px solid #E6E6E6;
+        height: 40px;
+        color: #202020;
+        min-width: -webkit-min-content;
+    }
+    .log-table {
+        position: relative;
+        height: calc(100vh - 325px);
+    }
+    .table-small {
+        height: calc(100vh - 502px) !important;
+    }
+    .table-item {
+        display: flex;
+        justify-content: space-around;
+        align-items: center;
+        border-bottom: 1px solid #E6E6E6;
+        height: 60px;
+        color: #2E3336;
+        min-width: -webkit-min-content;
+    }
+    .item-display {
+        // background: #eee;
+        color: #999;
+    }
+    .select-box {
+        display: flex;
+        position: absolute;
+        bottom: 0;
+        left: 0;
+        padding: 20px;
+        width: 100%;
+        height: 250px;
+        background: #FFFFFF;
+        box-shadow: 0px -2px 16px 0px rgba(214,214,214,0.5);
+        border-radius: 6px;
+        overflow: hidden;
+        z-index: 99;
+        &-left {
+            flex: 1;
+            display: flex;
+            margin-right: 50px;
+        }
+        &-right {
+            flex: 1;
+            height: 100%;
+            &-info {
+                display: flex;
+                flex-direction: column;
+                flex-wrap: wrap;
+                height: 90%;
+                overflow: auto;
+            }
+        }
+        .line {
+            position: absolute;
+            left: 50%;
+            right: 50%;
+            top: 50%;
+            bottom: 50%;
+            transform: translate(-50%, -50%);
+            width: 1px;
+            height: 206px;
+            background: rgba(0,0,0,0.15);
+        }
+        &-item {
+            cursor: pointer;
+            padding: 3px 8px;
+            &:hover {
+                background: #F3F3F3;
+            }
+        }
+        .close-outlined {
+            position: absolute;
+            right: 10px;
+            top: 10px;
+            color: #999;
+            cursor: pointer;
+        }
+    }
+    .log-search {
+        padding: 15px 20px;
+    }
+    .location {
+        justify-content: flex-start;
+        padding: 10px;
+    }
+    .ant-input-group-wrapper {
+        width: 300px;
+    }
+    .log-data {
+        overflow: auto;
+        height: 100%;
+    }
+    .parent_cnames {
+        min-width: 300px;
+        max-width: 300px;
+        margin-left: 20px;
+        color: inherit;
+        &-text {
+            margin-left: 10px;
+        }
+        &-checkbox {
+            text-align: left;
+            span {
+                padding: 0;
+            }
+        }
+    }
+    .platform_prop_id {
+        min-width: 150px;
+        max-width: 150px;
+        input {
+            height: 30px;
+            width: 120px;
+            border: 1px solid #E5E5E5;
+        }
+        input:focus {
+            border:1px solid #40A9FF;
+            outline:none;
+            box-shadow: 0 0 0 2px rgba(24,144,255,0.2);
+            border-right-width: 1px;
+        }
+
+    }
+    .platform_prop_name {
+        min-width: 150px;
+        max-width: 150px;
+        input {
+            height: 30px;
+            width: 120px;
+            border: 1px solid #E5E5E5;
+        }
+        input:focus {
+            border:1px solid #40A9FF;
+            outline:none;
+            box-shadow: 0 0 0 2px rgba(24,144,255,0.2);
+            border-right-width: 1px;
+        }
+        .remove-icon {
+            margin-left: 5px;
+        }
+    }
+    .ay_prop_name, .ay_prop_value_name {
+        min-width: 150px;
+        max-width: 150px;
+    }
+    .custom_flag {
+        min-width: 80px;
+        max-width: 80px;
+    }
+    .type {
+        min-width: 80px;
+        max-width: 80px;
+        text-align: center;
+    }
+    .caozuo {
+        min-width: 150px;
+        max-width: 150px;
+        text-align: center;
+        &-text {
+            color: #1890FF;
+            cursor: pointer;
+        }
+    }
+    .log-paging {
+        display: flex;
+        justify-content: space-between;
+    }
+    .domain-key {
+        display: flex;
+        flex-direction: column;
+        span {
+            width: 120px;
+            text-align: right;
+            margin-right: 20px;
+        }
+    }
+    .domain-name {
+        display: flex;
+        flex-direction: column;
+        flex-wrap: wrap;
+        align-content: flex-start;
+        height: 100%;
+        overflow: auto;
+        
+        span {
+            width: 90px;
+        }
+    }
+    .domain-attribute {
+        width: 100%;
+        .customize {
+            padding: 0 6px;
+            background: #FFF7E6;
+            color: #D46B08;
+        }
+        .select {
+            padding: 0 6px;
+            background: #FFF2F0;
+            color: #FF4D4F;
+            margin-right: 0;
+        }
+        .attribute-title {
+            display: flex;
+            span {
+                margin-right: 3vw;
+            }
+        }
+   
+    }
+
+}
+.recommend-value-dialog {
+    .recommend-value-box {
+        display: flex;
+        margin-top: 20px;
+        input {
+            width: 300px;
+            margin-bottom: 10px;
+        }
+    }
+    .recommend-value-name {
+        width: 120px;
+    }
+    .recommend-value {
+        display: flex;
+        flex-direction: column;
+        max-height: 400px;
+        overflow: auto;
+        margin-left: 20px;
+        width: 100%;
+        &-inputs {
+            display: flex;
+            margin-left: 10px;
+            img {
+                width: 25px;
+                height: 25px;
+                margin-left: 10px;
+            }
+        }
+    }
+    .note-info {
+        margin-left: 107px;
+        margin-top: 20px;
+        color: rgba(0,0,0,0.45);
+        font-size: 12px;
+    }
+    .copy-btn {
+        display: flex;
+        margin-left: auto;
+    }
+
+}
+.submit-btn {
+    margin-top: 10px;
+    display: flex;
+    margin-left: auto;
+}

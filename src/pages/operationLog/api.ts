@@ -116,7 +116,7 @@ export const getOperationLog = (params: any) => {
  * @returns
  */
 export const getAbnormalPurchaseOrderList = (params: any) => {
-    const fields = 'status,origin_fail_reson,num_iid,sku_id,num,title,sku_properties_name,seller_nick,orders';
+    const fields = 'status,origin_fail_reson,num_iid,sku_id,num,title,sku_properties_name,seller_nick,orders,distributor_nick,distributor_id';
     const storeId = 'BIYAO';
     const appName = 'tradeSupplier';
     return new Promise((resolve, reject) => {
