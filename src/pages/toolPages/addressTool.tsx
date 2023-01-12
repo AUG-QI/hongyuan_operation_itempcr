@@ -48,6 +48,7 @@ interface AddressToolState {
 }
 
 const platformSearchList = ['BY', 'aiyong'];
+/** 地址工具页面 */
 class AddressTool extends React.Component<AddressToolProps, AddressToolState> {
     constructor(props: AddressToolProps) {
         super(props);
@@ -68,20 +69,25 @@ class AddressTool extends React.Component<AddressToolProps, AddressToolState> {
                     title: '必要-省/市/区',
                     dataIndex: 'BYHierarchy',
                     key: 'BYHierarchy',
+                    width: 200,
                 },
                 {
                     title: '爱用-省/市/区',
                     dataIndex: 'aiyongHierarchy',
                     key: 'aiyongHierarchy',
+                    width: 200,
                 },
                 {
                     title: '三级地址id',
                     dataIndex: 'bind_id',
                     key: 'bind_id',
+                    width: 100,
                 },
                 {
                     title: '操作',
                     key: 'action',
+                    fixed: 'right',
+                    width: 300,
                     render: (_, record) => (
                         <Space size="middle">
                             <a onClick={this.modifyArddress.bind(this, record, 'by')}>修改必要地址</a>
@@ -95,7 +101,8 @@ class AddressTool extends React.Component<AddressToolProps, AddressToolState> {
         };
     }
     /** 删除地址 */
-    delArddress = ({ id, platform }) => {
+    delArddress = (record) => {
+        const { id, platform } = record;
         Modal.confirm({
             title: '提示',
             content:
@@ -157,8 +164,8 @@ class AddressTool extends React.Component<AddressToolProps, AddressToolState> {
             const data = aiyongarr.find(i => item.bind_id == i.id);
             //  去重
             return {
-                ...item,
                 ...data,
+                ...item,
             };
         });
         // const tradeTidSet = new Set();
@@ -526,14 +533,12 @@ class AddressTool extends React.Component<AddressToolProps, AddressToolState> {
                                 // fieldNames={{ label: 'aiyongprovinceName', value: 'aiyongprovinceName' }}
                                 placeholder="请输入父级地址编码"
                                 // optionFilterProp="children"
-                                filterOption={(input, option) => (option?.aiyongHierarchy ?? '').includes(input)}
-                                filterSort={(optionA, optionB) =>
-                                    (optionA?.label ?? '').toLowerCase().localeCompare((optionB?.aiyongHierarchy ?? '').toLowerCase())
-                                }
+                                filterOption={(input, option) => (`${option?.key}${option?.aiyongHierarchy}` ?? '').includes(input)}
+                                filterSort={(optionA, optionB) => (optionA?.label ?? '').toLowerCase().localeCompare((`${optionB?.key}${optionB?.aiyongHierarchy}` ?? '').toLowerCase())}
                                 // options={this.getOptions(aiyongarr, 'aiyongprovinceCode')}
                             >
                                 {this.getOptions(aiyongarr, 'aiyongcityCode').map((item: any) => {
-                                    return <Option key={item.aiyongcityCode} aiyongprovinceName={item.aiyongcityName}  data-item={item}>{item.aiyongcityCode}-{item.aiyongHierarchy}</Option>;
+                                    return <Option key={item.aiyongcityCode} aiyongprovinceName={item.aiyongcityName} aiyongHierarchy={item.aiyongHierarchy} data-item={item}>{item.aiyongcityCode}-{item.aiyongHierarchy}</Option>;
                                 })}
                             </AutoComplete>
                         </div>
@@ -552,20 +557,18 @@ class AddressTool extends React.Component<AddressToolProps, AddressToolState> {
                             <span className='item-label'>三级地址id</span>
                             <AutoComplete
                                 showSearch
-                                style={{
-                                    width: 300,
-                                }}
+                                style={{ width: 300 }}
                                 value={inputValue.bind_id}
                                 // optionLabelProp="areaCode"
-                                filterOption={(input, option) => (option?.aiyongHierarchy ?? '').includes(input)}
+                                filterOption={(input, option) =>  (`${option?.aiyongHierarchy}${option?.key}` ?? '').includes(input)}
                                 filterSort={(optionA, optionB) =>
-                                    (optionA?.label ?? '').toLowerCase().localeCompare((optionB?.aiyongHierarchy ?? '').toLowerCase())
+                                    (optionA?.label ?? '').toLowerCase().localeCompare((`${optionB?.aiyongHierarchy}${optionB?.key}` ?? '').toLowerCase())
                                 }
                                 onChange={this.changeParentSelectValue.bind(this, 'bind_id', 'aiyongHierarchy', 'aiyongHierarchy')}
                                 placeholder="请输入区"
                             >
                                 {this.getOptions(aiyongarr, 'code').map((item: any) => {
-                                    return <Option key={item.code} aiyongHierarchy={item.aiyongHierarchy}  data-item={item}>{item.aiyongHierarchy}-{item.code} </Option>;
+                                    return <Option key={item.id} aiyongHierarchy={item.aiyongHierarchy}  data-item={item}>{item.aiyongHierarchy}-{item.id} </Option>;
                                 })}
                             </AutoComplete>
                             {/* <AutoComplete

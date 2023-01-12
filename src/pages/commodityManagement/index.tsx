@@ -7,6 +7,7 @@ import { exportItemData, getCategoryOptions, reqSearchCommodity } from './api';
 import { numberRegular } from '../inventorySynchronous';
 import FooterPage from '../../components/footerPage';
 import { NavLink } from 'react-router-dom';
+import { isEmpty } from '../../services/utils';
 
 interface IProps {
 }
@@ -383,23 +384,30 @@ class CommodityManagement extends React.Component<IProps, IState>  {
                 return message.warning('暂无数据导出');
             }
             // 选中的商品不是同一个类目 提示框
-            if (!searchData.category.length) {
+            if (!searchData.category.length && isEmpty(searchData.inputVal)) {
                 return message.warning('所勾选商品非同一类目,无法导出');
             }
-            this.handelExportItems();
+            this.handelExportItems('all');
         } else if (type === 'exportItemSelected') {
             // 导出选中
             const { rowSelection } = this.state;
             if (!rowSelection.selectedRowKeys.length) {
                 return message.warning('请先勾选商品');
             }
-            const categoryList = rowSelection.selectedRowData.map((item: any) => item.categoryInfo);
+            const categoryList = rowSelection.selectedRowData.map((item: any) => {
+                return `${item.firstCategoryId}/${item.secondCategoryId}/${item.thirdCategoryId}`;
+            });
+            console.log(categoryList, '?????/');
+            
             const categoryInfo = new Set(categoryList);
             // 选中的商品不是同一个类目
             if (categoryInfo.size !== 1) {
-                return message.warning('所勾选商品非同一类目,无法导出');
+                return message.warning('所勾选商品非同一类目,无法导出1');
             }
-            this.handelExportItems(rowSelection.selectedRowKeys, categoryList[0]);
+            const data = categoryList[0].split('/');
+            console.log( data[data.length - 1]);
+            // return;
+            this.handelExportItems('select', rowSelection.selectedRowKeys, categoryList[categoryList.length - 1]);
         }
     }
     /**
@@ -415,12 +423,12 @@ class CommodityManagement extends React.Component<IProps, IState>  {
     /**
      * 开始处理选择的导出商品
      */
-    handelExportItems = async (spuIdArr = [], id: string = '') => {
+    handelExportItems = async (type = 'all', spuIdArr = [], id: string = '') => {
         const { searchData } = this.state;
         const thirdCategoryId =
             searchData.category[searchData.category.length - 1] || id;
         // 部分导出或者直接是id搜索 直接传选择的+类目
-        if (spuIdArr.length || (searchData.inputVal && numberRegular.test(searchData.inputVal))) {
+        if (type === 'select' || !isEmpty(searchData.spuId)) {
             const spuIds = spuIdArr.length ? spuIdArr : searchData.inputVal.trim().split();
             // 导出选中
             await exportItemData({ spuIds, thirdCategoryId });
@@ -428,13 +436,14 @@ class CommodityManagement extends React.Component<IProps, IState>  {
             // 全部就需要传搜索条件
             const data: any = {};
             // 三级类目
-            data.thirdCategoryId = thirdCategoryId;
+            data.thirdCategoryId = thirdCategoryId || searchData.inputVal;
             if (!searchData.distributionState.includes('all')) {
                 data.distributionState = searchData.distributionState;
             }
             if (searchData.inputVal && searchData.inputVal.trim()) {
                 data.productName = searchData.inputVal;
             }
+            // return
             await exportItemData(data);
         }
     };

@@ -60,9 +60,11 @@ const ITEMS = [
         key: '/tool',
         icon: <ToolOutlined />,
         children: [
+            { label: '类目工具', key: '/categoryTool' },
             { label: '属性工具', key: '/mapTool' },
             { label: '值域工具', key: '/domainTool' },
-            { label: '地址工具', key: '/addressTool' },
+            false && { label: '地址工具', key: '/addressTool' },
+
         ],
     },
     false && {
@@ -73,7 +75,6 @@ const ITEMS = [
 ];
 // const retentionDialog = (text, handleOk, handleCancel) => {
 //     console.log(text, '???');
-    
 //     return <Modal title="Basic Modal" open={true}>
 //     <p>{text}</p>
 //     <p>Some contents...</p>

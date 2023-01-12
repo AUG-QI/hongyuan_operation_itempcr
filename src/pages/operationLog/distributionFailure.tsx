@@ -18,6 +18,7 @@ interface IState {
     defaultMomentValue: any;
     loading: boolean;
     linkSearch: boolean;
+    searchListData: any;
 }
 const eventHello = "hello";
 
@@ -33,7 +34,7 @@ export function addListenerHello (handler: any) {
  * 触发事件
 */
 export function doHello (args: any) {
-    eventEmiter.emit(eventHello, args);
+    eventEmiter.emit(eventHello, args, 'settime');
 }
 /** 铺货失败日志 */
 class DistributionFailure extends React.Component<IProps, IState> {
@@ -47,6 +48,7 @@ class DistributionFailure extends React.Component<IProps, IState> {
             defaultMomentValue: null,
             loading: true,
             linkSearch: false,
+            searchListData: OPERATION_LOG_DATA.SHELVES_FAILURE_SEARCH_LIST,
         };
     }
     componentDidMount (): void {
@@ -93,9 +95,17 @@ class DistributionFailure extends React.Component<IProps, IState> {
     /**
      * 真正开始搜索
      */
-    hanldeSearch = async (searchInfo = null) => {
+    hanldeSearch = async (searchInfo = null, type = '') => {
         const { searchVal } =  this.state;
         const parameter = searchInfo || searchVal;
+        if (type === 'settime' && searchInfo) {
+            //  @ts-ignore
+            searchInfo.time = [];
+            //  @ts-ignore
+            searchInfo.time[0] = searchInfo.start_time;
+            //  @ts-ignore
+            searchInfo.time[1] = searchInfo.end_time;
+        }
         // 处理一下搜索参数里面的页码
         const searchDataJson = JSON.stringify(parameter);
         const searchData = JSON.parse(searchDataJson);
@@ -106,6 +116,13 @@ class DistributionFailure extends React.Component<IProps, IState> {
         if (parameter.pageSize) {
             searchData.page_size = parameter.pageSize;
             delete searchData.pageSize;
+        }
+        if (searchVal.time) {
+            searchData.start_time = searchVal.time[0];
+            searchData.end_time = searchVal.time[1];
+            delete searchData.time;
+            delete searchData.month;
+            delete searchData.update_time;
         }
         const res: any = await getDistributeErrorLog(searchData);
         const updateData: any = {
@@ -121,8 +138,10 @@ class DistributionFailure extends React.Component<IProps, IState> {
             parameter.origin_title ||
             parameter.distribute_memo) {
             updateData.tableTitle = OPERATION_LOG_DATA.SHELVES_FAILURE_TABLE_ALL_LIST;
+            updateData.searchListData = OPERATION_LOG_DATA.SHELVES_FAILURE_SEARCH_ALL_LIST;
         } else {
             updateData.tableTitle = OPERATION_LOG_DATA.SHELVES_FAILURE_TABLE_DEFAULT_LIST;
+            updateData.searchListData = OPERATION_LOG_DATA.SHELVES_FAILURE_SEARCH_LIST;
         }
         if (searchInfo) {
             updateData.searchVal = searchInfo;
@@ -133,9 +152,9 @@ class DistributionFailure extends React.Component<IProps, IState> {
         this.setState(updateData);
     }
     render (): React.ReactNode {
-        const { tableTitle, searchVal, total, tableData, defaultMomentValue, loading, linkSearch } = this.state;
+        const { tableTitle,searchListData, searchVal, total, tableData, defaultMomentValue, loading, linkSearch } = this.state;
         return <div className="distribution-failure">
-            <LogSearch searchVal={searchVal} linkSearch={linkSearch} defaultMomentValue={defaultMomentValue} searchKeyList={OPERATION_LOG_DATA.SHELVES_FAILURE_SEARCH_LIST} onSearch={this.onSearch}></LogSearch>
+            <LogSearch searchVal={searchVal} linkSearch={linkSearch} defaultMomentValue={defaultMomentValue} searchKeyList={searchListData} onSearch={this.onSearch}></LogSearch>
             {/* <Spin spinning={true}> */}
             <LogTable loading={loading} rowKey='id' tableData={tableData} tableTitle={tableTitle}></LogTable>
             <LogPaging total={total} changePage={this.changePage} pageNo={searchVal.pageNo || 1}></LogPaging>

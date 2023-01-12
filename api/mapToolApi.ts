@@ -7,6 +7,7 @@ import axios from "../src/services/axios";
  * @returns
  */
 export const getMultiPlatformAddress = (params: any): Promise<any> => {
+    params.ay_token = 'SFRUUF9BWV9UT0tFTg==';
     const formData = new FormData();
     for (const key in params) {
         formData.append(key, params[key]);
@@ -14,9 +15,6 @@ export const getMultiPlatformAddress = (params: any): Promise<any> => {
     return new Promise((resolve, reject) => {
         axios.post('iytrade2/getMultiPlatform', formData, {
             baseURL: config.PHP_URL,
-            // withCredentials: false,
-            // withCredentials: false,
-            headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
         })
             .then((response: any) => {
                 if (response.code !== 200) {
@@ -51,6 +49,7 @@ interface AddMultiPlatformAddressParams {
  * @returns
  */
 export const addMultiPlatformAddress = (params: any): Promise<any> => {
+    params.ay_token = 'SFRUUF9BWV9UT0tFTg==';
     const formData = new FormData();
     for (const key in params) {
         formData.append(key, params[key]);
@@ -76,6 +75,7 @@ export const addMultiPlatformAddress = (params: any): Promise<any> => {
  * @returns
  */
 export const editMultiPlatformAddress = (params: any): Promise<any> => {
+    params.ay_token = 'SFRUUF9BWV9UT0tFTg==';
     const formData = new FormData();
     for (const key in params) {
         formData.append(key, params[key]);
@@ -102,6 +102,7 @@ export const editMultiPlatformAddress = (params: any): Promise<any> => {
  * @returns
  */
 export const editMultiPlatformAddressBind = (params: any): Promise<any> => {
+    params.ay_token = 'SFRUUF9BWV9UT0tFTg==';
     const formData = new FormData();
     for (const key in params) {
         formData.append(key, params[key]);
@@ -127,6 +128,7 @@ export const editMultiPlatformAddressBind = (params: any): Promise<any> => {
  * @returns
  */
 export const delMultiPlatformAddress = (params: any): Promise<any> => {
+    params.ay_token = 'SFRUUF9BWV9UT0tFTg==';
     const formData = new FormData();
     for (const key in params) {
         formData.append(key, params[key]);
@@ -146,4 +148,78 @@ export const delMultiPlatformAddress = (params: any): Promise<any> => {
                 reject(error);
             });
     });
+};
+
+/**
+ * 查询类目映射
+ * @returns
+ */
+export const searchCatsMapping = (params: any): Promise<any> => {
+    return axios.post('/itemManage/searchCatsMapping', params)
+        .then((response: any) => {
+            if (response.code !== 200) {
+                return [];
+            }
+            return response.data || [];
+        });
+};
+/** 查询爱用类目 */
+export const searchAyCats = (params: any) => {
+    return axios.post('/itemManage/searchAyCats', params)
+        .then((response: any) => {
+            if (response.code !== 200) {
+                return [];
+            }
+            return response.data;
+        });
+};
+/** 查询三方平台类目 */
+export const searchPlatformCats = (params: any) => {
+    return axios.post('/itemManage/searchPlatformCats', params)
+        .then((response: any) => {
+            if (response.code !== 200) {
+                return [];
+            }
+            return response.data;
+        });
+};
+/** 更新平台类目 */
+export const changeCats = (params: any) => {
+    return axios.post('/itemManage/changeCats', params)
+        .then((response: any) => {
+            if (response.code !== 200) {
+                return 'error';
+            }
+            return response.data;
+        });
+};
+/** 新增爱用类目 */
+export const addAyCats = (params: any) => {
+    return axios.post('/itemManage/addAyCats', params)
+        .then((response: any) => {
+            if (response.code !== 200) {
+                return response.message;
+            }
+            return 'success';
+        });
+};
+/** 新增爱用类目 */
+export const setPropsDefaultValue = (params: any) => {
+    return axios.post('/itemManage/setPropsDefaultValue', params)
+        .then((response: any) => {
+            if (response.code !== 200) {
+                return [];
+            }
+            return response.data;
+        });
+};
+/** 新增爱用类目 */
+export const getPropDefaultValue = (params: any) => {
+    return axios.post('/itemManage/getPropDefaultValue', params)
+        .then((response: any) => {
+            if (response.code !== 200) {
+                return [];
+            }
+            return response.data;
+        });
 };

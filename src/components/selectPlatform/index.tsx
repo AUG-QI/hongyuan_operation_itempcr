@@ -20,6 +20,7 @@ export const PLATFORM_IMG: any = {
     youzan: 'https://q.aiyongtech.com/biyao/imgs/youzan_logo.png',
     youzanGray: 'https://q.aiyongtech.com/biyao/imgs/youzan_logo_%20grey.png',
     shipinhao: 'https://q.aiyongtech.com/biyao/imgs/shipinghao_logo.png',
+    wxvideoshop: 'https://q.aiyongtech.com/biyao/imgs/shipinghao_logo.png',
     shipinhaoGray:
         'https://q.aiyongtech.com/biyao/imgs/shipinghao_logo_grey.png',
 };

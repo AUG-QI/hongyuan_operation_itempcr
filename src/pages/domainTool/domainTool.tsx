@@ -14,6 +14,7 @@ import {
 } from 'antd';
 import {
     CloseOutlined,
+    CheckOutlined,
     CloseCircleOutlined,
     QuestionCircleOutlined,
 } from '@ant-design/icons';
@@ -115,8 +116,7 @@ class DomainTool extends React.Component<any, any> {
         const selectedData: any = val;
         const { searchData } = this.state;
         if (type === 'leimuValue') {
-            const newCids =
-                val?.map((item: any) => item[item?.length - 1]) || [];
+            const newCids = val?.map((item: any) => item[item?.length - 1]) || [];
             searchData.cids = newCids;
             searchData[type] = selectedData;
             this.setState({ searchData });
@@ -257,15 +257,10 @@ class DomainTool extends React.Component<any, any> {
     };
     /** 选中爱用值域 */
     clickAyValue = (item: any, key: string = '') => {
-      
-        
-        const { selectedIndex, tableData, setValueData } = this.state;
-        
-        let data = tableData[selectedIndex].ay_vids || [];
+        const { selectedIndex, tableData, setValueData, platValuesStatus } = this.state;
+        let data = JSON.parse(JSON.stringify(tableData[selectedIndex].ay_vids)) || [];
         const tableDataItem = tableData[selectedIndex];
-        console.log(tableDataItem, '???/item');
-        const itemPlatforms =
-            item.platforms?.filter((info: string) => info !== 'BIYAO') || [key] || [];
+        const itemPlatforms = item.platforms?.filter((info: string) => info !== 'BIYAO') || [key] || [];
         if (!data.length) {
             data.push({
                 ay_prop_value_id:
@@ -275,14 +270,8 @@ class DomainTool extends React.Component<any, any> {
                 platforms: itemPlatforms || [key],
             });
         } else {
-            if (key) {
-                data = data?.filter(
-                    (info: any) =>
-                        !(
-                            info.platforms?.length &&
-                            info.platforms?.includes(key)
-                        )
-                );
+            if (key && !platValuesStatus) {
+                data = data?.filter((info: any) => !(info.platforms?.length && info.platforms?.includes(key)));
                 data.push({
                     ay_prop_value_id:
                         item.ay_prop_value_id || item.platform_prop_value_id,
@@ -312,13 +301,20 @@ class DomainTool extends React.Component<any, any> {
         }
         const setValueDataKey = `${tableDataItem.ay_cid}+${tableDataItem.ay_prop_value_id}`;
         const setValueList = [];
-        if (key) {
+        if (key && !platValuesStatus) {
             data.forEach((info: any) => {
-                setValueList.push({
-                    set_platform_prop_value_id: info.ay_prop_value_id,
-                    set_platform_prop_value_name: info.ay_prop_value_name,
-                    platform: info.platforms?.join(','),
-                });
+                if (info.ay_prop_value_id.includes('vid')) {
+                    setValueList.push({
+                        set_ay_prop_value_id: info.ay_prop_value_id,
+                        set_ay_prop_value_name: info.ay_prop_value_name,
+                    });
+                } else {
+                    setValueList.push({
+                        set_platform_prop_value_id: info.ay_prop_value_id,
+                        set_platform_prop_value_name: info.ay_prop_value_name,
+                        platform: info.platforms?.join(','),
+                    });
+                }
             });
         } else {
             setValueList.push({
@@ -786,14 +782,23 @@ class DomainTool extends React.Component<any, any> {
                                         >
                                             {!editorStatus &&
                                             !selectBoxVisible ? (
-                                                <Checkbox
-                                                    checked={item.checked}
-                                                    onChange={this.changeCheckbox.bind(
-                                                        this,
-                                                        index
-                                                    )}
-                                                    className="parent_cnames-checkbox"
-                                                >
+                                                    <Checkbox
+                                                        checked={item.checked}
+                                                        onChange={this.changeCheckbox.bind(
+                                                            this,
+                                                            index
+                                                        )}
+                                                        className="parent_cnames-checkbox"
+                                                    >
+                                                        <span
+                                                            className={
+                                                                'parent_cnames-text'
+                                                            }
+                                                        >
+                                                            {item.parent_cnames}
+                                                        </span>
+                                                    </Checkbox>
+                                                ) : (
                                                     <span
                                                         className={
                                                             'parent_cnames-text'
@@ -801,16 +806,7 @@ class DomainTool extends React.Component<any, any> {
                                                     >
                                                         {item.parent_cnames}
                                                     </span>
-                                                </Checkbox>
-                                            ) : (
-                                                <span
-                                                    className={
-                                                        'parent_cnames-text'
-                                                    }
-                                                >
-                                                    {item.parent_cnames}
-                                                </span>
-                                            )}
+                                                )}
                                         </div>
                                         <div className={'platform_prop_name'}>
                                             {item.platform_prop_name}
@@ -859,7 +855,7 @@ class DomainTool extends React.Component<any, any> {
                                             ) : (
                                                 <span
                                                     onClick={() => {
-                                                        if (!ayText) {
+                                                        if (!editorStatus) {
                                                             return message.warning(
                                                                 '点击上方按钮启动编辑模式'
                                                             );
@@ -869,6 +865,10 @@ class DomainTool extends React.Component<any, any> {
                                                     {ayText || '-'}
                                                 </span>
                                             )}
+                                        </div>
+
+                                        <div className='not_match_plantform'>
+                                            {item.not_match_plantform ? <CloseOutlined style={{ fontSize: '16px', color: '#f81d22', marginLeft: '28px' }} /> : <CheckOutlined style={{ fontSize: '16px', color: '#0b8235', marginLeft: '28px' }}  /> }
                                         </div>
                                         <div className="platforms">
                                             {item.platforms?.map(

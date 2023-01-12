@@ -2,7 +2,7 @@
  * @Author: 二齐 1321703149@qq.com
  * @Date: 2022-11-23 16:27:58
  * @LastEditors: 二齐 1321703149@qq.com
- * @LastEditTime: 2022-12-30 14:52:24
+ * @LastEditTime: 2023-01-12 11:17:49
  * @FilePath: /hongyuan_operation_itempcr/src/pages/homePage/homePageContent/index.tsx
  * @Description: 这是默认设置,请设置`customMade`, 打开koroFileHeader查看配置 进行设置: https://github.com/OBKoro1/koro1FileHeader/wiki/%E9%85%8D%E7%BD%AE
  */
@@ -28,6 +28,7 @@ import MapTool from "../../mapList/mapTool";
 import InventoryOperation from '../../operationLog/inventoryOperation';
 import AddressTool from '../../toolPages/addressTool';
 import './index.scss';
+import CategoryTool from '../../toolPages/categoryTool';
 
 
 /** 主页 */
@@ -54,7 +55,8 @@ class HomePageContent extends React.Component {
                     <Route path='modifyLog' element={<ModifyLog/>}></Route>
                     <Route path='mapTool' element={<MapTool/>}></Route>
                     <Route path='domainTool' element={<DomainTool/>}></Route>
-                    <Route path='addressTool' element={<AddressTool/>}></Route>
+                    {false && <Route path='addressTool' element={<AddressTool/>}></Route>}
+                    <Route path='categoryTool' element={<CategoryTool/>}></Route>
                     {/* <Route path='erqiDemo' element={<ErqiDemo/>}></Route> */}
                 </Routes>
             </div>

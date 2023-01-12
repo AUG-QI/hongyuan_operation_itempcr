@@ -38,6 +38,36 @@ export const OPERATION_LOG_DATA =  {
             key: 'month',
         },
     ],
+    SHELVES_FAILURE_SEARCH_ALL_LIST: [
+        {
+            title: '电商平台名',
+            key: 'shop_type',
+        },
+        {
+            title: '分销商ID',
+            key: 'seller_id',
+        },
+        {
+            title: '分销商店铺名',
+            key: 'shop_name',
+        },
+        {
+            title: '必要商品ID',
+            key: 'origin_num_iid',
+        },
+        {
+            title: '必要商品名',
+            key: 'origin_title',
+        },
+        {
+            title: '失败原因',
+            key: 'distribute_memo',
+        },
+        {
+            title: '更新时间',
+            key: 'time',
+        },
+    ],
     /** 铺货失败日志表格默认数据 */
     SHELVES_FAILURE_TABLE_DEFAULT_LIST: [
         {
@@ -1276,6 +1306,9 @@ export const getSpecifiedTime = (type: string = '') => {
         // 开始时间
         momentTime = [moment(formateDate[0], dateFormat), moment(formateDate[1], dateFormat)];
     }
+    console.log(momentTime,
+        formateDate,);
+    
     return {
         momentTime,
         formateDate,
@@ -1311,4 +1344,21 @@ const getFormateDate = (time: any, type = '') => {
     }
     const day = time.getDate() < 10 ? '0' + time.getDate() : time.getDate();
     return year + '-' + month + '-' + day;
+};
+/**  获取指定日期的周的第一天、月的第一天、季的第一天、年的第一天 */
+const  timeFormat = (date: any) => {
+    if (!date || typeof (date) === "string") {
+        return '';
+    }
+    const year = date.getFullYear(); // 年
+    const month = date.getMonth() + 1; // 月
+    const day = date.getDate(); // 日
+
+    return year + "-" + month + "-" + day + ' 00:00:00';
+}
+
+/** 获取当月第一天 */
+export const  getFirstDayOfMonth = (date: any) => {
+    date.setDate(1);
+    return timeFormat(date);
 };

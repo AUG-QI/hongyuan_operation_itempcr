@@ -1,3 +1,11 @@
+/*
+ * @Author: 二齐 1321703149@qq.com
+ * @Date: 2022-11-30 15:42:37
+ * @LastEditors: 二齐 1321703149@qq.com
+ * @LastEditTime: 2023-01-07 16:29:53
+ * @FilePath: /hongyuan_operation_itempcr/src/pages/domainTool/index.ts
+ * @Description: 这是默认设置,请设置`customMade`, 打开koroFileHeader查看配置 进行设置: https://github.com/OBKoro1/koro1FileHeader/wiki/%E9%85%8D%E7%BD%AE
+ */
 
 import { storeId_params } from "../operationLog/component/logSearch";
 
@@ -22,6 +30,10 @@ export const DomainToolTableTitle = [
     {
         value: 'ay_vids',
         name: '爱用值域名字',
+    },
+    {
+        value: 'not_match_plantform',
+        name: '平台匹配情况',
     },
     {
         value: 'platforms',

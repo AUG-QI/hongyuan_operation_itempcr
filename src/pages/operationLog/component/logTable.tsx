@@ -1,8 +1,17 @@
+/*
+ * @Author: 二齐 1321703149@qq.com
+ * @Date: 2022-10-17 14:42:04
+ * @LastEditors: 二齐 1321703149@qq.com
+ * @LastEditTime: 2023-01-06 12:18:10
+ * @FilePath: /hongyuan_operation_itempcr/src/pages/operationLog/component/logTable.tsx
+ * @Description: 这是默认设置,请设置`customMade`, 打开koroFileHeader查看配置 进行设置: https://github.com/OBKoro1/koro1FileHeader/wiki/%E9%85%8D%E7%BD%AE
+ */
 import { ConfigProvider, Spin, Table } from 'antd';
 import React from 'react';
 import zh_CN from 'antd/es/locale/zh_CN';
 import { doHello } from '../distributionFailure';
 import '../index.scss';
+import { getFirstDayOfMonth } from '..';
 
 interface IProps {
     tableTitle: any;
@@ -24,10 +33,12 @@ export const errorNumLink = (text: string, data: any) => {
  * @param info
  */
 const errorNumLinkSearch = (info: any) => {
+    const date = new Date();
     const data = {
         shop_type: info.store_id,
         distribute_memo: info.error_msg,
-        update_time: info.update_time,
+        start_time: getFirstDayOfMonth(date),
+        end_time: info.update_time,
     };
     doHello(data);
 };

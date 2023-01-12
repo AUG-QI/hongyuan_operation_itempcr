@@ -1,6 +1,6 @@
 import React from 'react';
 import {
-    Button, Checkbox, Input, Select, Cascader, Modal, Pagination, message, ConfigProvider, Spin
+    Button, Checkbox, Input, Select, Cascader, Pagination, message, ConfigProvider, Spin
 } from 'antd';
 import { CloseOutlined, CloseCircleOutlined } from '@ant-design/icons';
 import Clipboard from 'clipboard';
@@ -11,10 +11,11 @@ import {
 import './index.scss';
 import SyncAttributeTitle from '../../components/syncAttributeTitle';
 import { getPropsMapList, searchPropName, setPropsBindRelation } from '../../../api/mulitemtransfromApi';
-import { PLATFORM_IMG } from '../../components/selectPlatform';
 import zh_CN from 'antd/es/locale/zh_CN';
 import BirthRecommendDomainDialog from './component/birthRecommendDomainDialog';
 import BatchBindDialog from './component/batchBindDialog';
+import SettingFixedValueDialog from './component/settingFixedValueDialog';
+import CheckFixedValueDialog from './component/checkFixedValueDialog';
 
 const { Search } = Input;
 
@@ -47,6 +48,12 @@ interface IState {
     /** 加载状态 */
     spinning: boolean;
     setValueData: any;
+    /** 设置固定值弹框 */
+    settingFixedValueDialogVisible: boolean;
+    /** 需要设置绑定的数据 */
+    settingFixedValueList: any[];
+    checkFixedValueDialogVisible: boolean;
+    checkFixedValueDialogData: any;
 
 }
 
@@ -75,6 +82,10 @@ class MapTool extends React.Component<IProps, IState> {
             recommendedValueName: '',
             spinning: true,
             setValueData: {},
+            settingFixedValueDialogVisible: false,
+            settingFixedValueList: [],
+            checkFixedValueDialogVisible: false,
+            checkFixedValueDialogData: {},
         };
     }
     async componentDidMount () {
@@ -333,14 +344,14 @@ class MapTool extends React.Component<IProps, IState> {
     }
     /**
      * 修改推荐值域名字
-     * @returns 
+     * @returns
      */
     changeRecommendedValueName = (event: any) => {
         this.setState({ recommendedValueName: event.target.value });
     }
     /**
      * 搜索批量绑定属性
-     * @returns 
+     * @returns
      */
     searchBatchBindAttribute = async (platformPropId: string) => {
         if (!platformPropId) {
@@ -361,7 +372,7 @@ class MapTool extends React.Component<IProps, IState> {
     }
     /**
      * 提交绑定
-     * @returns 
+     * @returns
      */
     submitBind = async () => {
         const { tableData, batchBindSearchResult } = this.state;
@@ -432,8 +443,46 @@ class MapTool extends React.Component<IProps, IState> {
         }
         this.setState({ tableData, setValueData, selectedIndex: index });
     };
+    handleSettingFixedValue = () => {
+        const { tableData } = this.state;
+        const selectedList = tableData.filter((item: any) => item.checked);
+        // 没有选中
+        if (!selectedList.length) {
+            return message.warning('请勾选需要设置的类目');
+        }
+        // 选中的爱用类目不同
+        const ayPropNameList = selectedList.map((item: any) => item.ay_prop_name);
+        const isSame = ayPropNameList.every((item: any) => item === ayPropNameList[0]);
+        if (!isSame) {
+            return message.warning('请勾选相同的爱用属性进行操作');
+        }
+        this.setState({ settingFixedValueDialogVisible: true, settingFixedValueList: selectedList });
+    }
+    /** 关闭设置固定值弹框 */
+    closeSettingFixedValueDialog = () => {
+        this.setState({ settingFixedValueDialogVisible: false });
+    }
+    /** 查看固定值 */
+    checkFixedValue = (item: any) => {
+        const data = {
+            aycid: item.ay_cid,
+            aypid: item.ay_prop_id,
+            ayname: item.ay_prop_name,
+        };
+        this.setState({ checkFixedValueDialogVisible: true, checkFixedValueDialogData: data });
+    }
+    closeCheckFixedValueDialog = () => {
+        this.setState({ checkFixedValueDialogVisible: false });
+    }
     render (): React.ReactNode {
-        const { editorStatus, selectBoxVisible, categoryoptions, rangeInfoDialgoVisible, tableData, biyaoPlatformData, searchData, total, searchInputValue, batchBindDialogVisible, batchBindSearchResult, recommendedValueName, spinning } = this.state;
+        const {
+            editorStatus,
+            selectBoxVisible,
+            categoryoptions,
+            rangeInfoDialgoVisible,
+            tableData, biyaoPlatformData,
+            searchData, total, searchInputValue, batchBindDialogVisible, batchBindSearchResult, recommendedValueName, spinning, settingFixedValueDialogVisible, settingFixedValueList, checkFixedValueDialogVisible, checkFixedValueDialogData,
+        } = this.state;
         const copyName = recommendedValueName || biyaoPlatformData.ay_prop_name;
         const num = tableData.filter((item: any) => item.checked).length || 0;
         const isAllChecked = tableData.every((item: any) => item.checked || item.is_default);
@@ -544,9 +593,9 @@ class MapTool extends React.Component<IProps, IState> {
                                 const canCustomize = !!item.ay_pvalues_data?.length;
                                 const type = attributeTypeOptions.filter(data => data.value === item.type).map(key => key.label);
                                 return <div className={`table-item ${item.is_default ? 'item-display' : ''}`} key={index} onClick={ () => {
-                                    if (item.is_default) {
-                                        message.warning('属性已做写死处理，无法修改');
-                                    }
+                                    // if (item.is_default) {
+                                    //     message.warning('属性已做写死处理，无法修改');
+                                    // }
                                 }}>
                                     <div className={'parent_cnames parent_cnames-checkbox'}>
                                         <Checkbox disabled={item.is_default} checked={item.checked && !item.is_default} onChange={this.changeCheckbox.bind(this, index)} className='parent_cnames-checkbox'>
@@ -562,8 +611,11 @@ class MapTool extends React.Component<IProps, IState> {
                                                     onFocus={this.onFocusBiyaoAttributeInput.bind(this, index, item)}
                                                     onBlur={this.onBlurBiyaoAttributeInput}></input>
                                                 : <span onClick={() => {
-                                                    if (!item.platform_prop_id && !item.is_default) {
+                                                    if (!editorStatus && !item.is_default) {
                                                         return message.warning('点击上方按钮启动编辑模式');
+                                                    }
+                                                    if (item.is_default) {
+                                                        message.warning('属性已设置固定值不支持修改');
                                                     }
                                                 }}>{item.platform_prop_id || '-'}</span>
                                         }
@@ -571,8 +623,11 @@ class MapTool extends React.Component<IProps, IState> {
                                     <div className={'platform_prop_name'}>
                                         {
                                             editorStatus ? <input id={`biyaoAttributeInput${index}`}disabled={item.is_default} placeholder={'请选择'} readOnly={true} value={item.platform_prop_name || ''}  onFocus={this.onFocusBiyaoAttributeInput.bind(this, index, item)} onBlur={this.onBlurBiyaoAttributeInput}></input> : <span onClick={() => {
-                                                if (!item.platform_prop_name) {
+                                                if (!editorStatus && !item.is_default) {
                                                     return message.warning('点击上方按钮启动编辑模式');
+                                                }
+                                                if (item.is_default) {
+                                                    message.warning('属性已设置固定值不支持修改');
                                                 }
                                             }}>{item.platform_prop_name || '-'}</span>
                                         }
@@ -593,11 +648,15 @@ class MapTool extends React.Component<IProps, IState> {
                                     <div className={'custom_flag'}>{item.custom_flag === '1' ? '可自定义' : '不可自定义'}</div>
                                     <div className={'type'}>{type[0] || ''}</div>
                                     <div className={'caozuo'} onClick={() => {
-                                        if (!canCustomize) {
-                                            return;
-                                        }
-                                        this.handleRangeInfo(item);
-                                    }}><span className={canCustomize ? 'caozuo-text' : ''}>{canCustomize ? '生成推荐值域' : '-'}</span></div>
+                                        // if (!canCustomize) {
+                                        //     return;
+                                        // }
+                                        // this.handleRangeInfo(item);
+                                    }}>
+                                        {canCustomize && <span className='caozuo-text' onClick={this.handleRangeInfo.bind(this, item)}>生成推荐值域</span>}
+                                        {item.is_default && item.type !== 'IMAGE' && <span className='caozuo-text' onClick={this.checkFixedValue.bind(this, item)}>查看固定值</span>}
+                                        {!canCustomize && !item.is_default && <span>-</span>}
+                                    </div>
                                 </div>;
                             })
                         }
@@ -608,6 +667,7 @@ class MapTool extends React.Component<IProps, IState> {
                 <div style={{ marginLeft: '33px' }}>
                     <Checkbox checked={isAllChecked} onChange={this.changeAllCheckbox.bind(this)}>全选本页({`${num}/${total}`})</Checkbox>
                     <Button type={'primary'} onClick={this.hadleBatchBind}>批量绑定</Button>
+                    <Button type={'primary'}  className="setting-btn" onClick={this.handleSettingFixedValue}>设置固定值</Button>
                 </div>
                 <ConfigProvider locale={zh_CN}>
                     <Pagination onChange={this.changePage} total={total} current={searchData.pageNo} pageSize={searchData.pageSize} />
@@ -617,6 +677,10 @@ class MapTool extends React.Component<IProps, IState> {
             { rangeInfoDialgoVisible && <BirthRecommendDomainDialog handleBirthRecommendDomainDialogCallback={this.closeCopeDomainDialog} defaultRecommendedName={copyName} copyInputData={copyInputData} domainData={domainData} biyaoPlatformData={biyaoPlatformData}></BirthRecommendDomainDialog>}
             {/** 批量绑定弹框 */}
             { batchBindDialogVisible && <BatchBindDialog handleBatchBindDialogCallback={this.handleBatchBindDialogCallback} batchBindSearchResult={batchBindSearchResult}></BatchBindDialog>}
+            {/** 设置固定值弹框 */}
+            { settingFixedValueDialogVisible && <SettingFixedValueDialog settingFixedValueList={settingFixedValueList} closeSettingFixedValueDialog={this.closeSettingFixedValueDialog}></SettingFixedValueDialog> }
+            {/** 查看固定值弹框 */}
+            { checkFixedValueDialogVisible && <CheckFixedValueDialog checkFixedValueDialogData={checkFixedValueDialogData} closeCheckFixedValueDialog={this.closeCheckFixedValueDialog}></CheckFixedValueDialog> }
         </div>;
     }
 }

@@ -142,6 +142,7 @@ export const deleteRelation = (params: any) => {
  * @returns
  */
 export const getCategoryOptions = (): Promise<any> => {
+    // return Promise.resolve([])
     return new Promise((resolve, reject) => {
         const nowDate = moment().format('YY-MM-DD');
         const dataJson = localStorage.getItem('categoryOptions');
