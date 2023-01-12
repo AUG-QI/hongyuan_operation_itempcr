@@ -72,7 +72,7 @@ class SettingFixedValueDialog extends React.Component<SettingFixedValueDialogPro
             if (!isEmpty(shipinghaoValue)) {
                 setDownstreamPlatform.WXVIDEOSHOP = shipinghaoValue;
             }
-            data.vname = JSON.stringify(setDownstreamPlatform);
+            data.vnames = JSON.stringify(setDownstreamPlatform);
         }
         const res = await setPropsDefaultValue(data);
         if (isEmpty(res.success)) {
@@ -95,7 +95,7 @@ class SettingFixedValueDialog extends React.Component<SettingFixedValueDialogPro
                 { dialogStatusType === 'setPlatform' ? <span className='remark'>(若无爱用公共值域，请<span className='setting-text' onClick={this.setDownstreamPlatform.bind(this, 'setDownstreamPlatform')}>设置下游平台固定值</span>)</span> : <span className='setting-text' style={{float: 'right'}} onClick={this.setDownstreamPlatform.bind(this, 'setPlatform')}>返回</span>}
                 <div className='setting-input'>
                     {
-                        dialogStatusType === 'setPlatform' ? <Input value={ayValue} placeholder='请输入固定值' onChange={this.changeInputValue.bind(this, 'platformInputValue')}/>
+                        dialogStatusType === 'setPlatform' ? <Input value={ayValue} placeholder='请输入固定值' onChange={this.changeInputValue.bind(this, 'ayValue')}/>
                             : <div>
                                 <div className='platform-info'><img  className='platform-img' src={PLATFORM_IMG.doudian} alt="" /> <Input value={dyValue} onChange={this.changeInputValue.bind(this, 'dyValue')} placeholder='设置固定值'></Input></div>
                                 <div className='platform-info' ><img  className='platform-img'src={PLATFORM_IMG.kuai} alt="" /> <Input value={ksValue} onChange={this.changeInputValue.bind(this, 'ksValue')} placeholder='设置固定值'></Input></div>
