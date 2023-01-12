@@ -459,7 +459,10 @@ class MapTool extends React.Component<IProps, IState> {
         this.setState({ settingFixedValueDialogVisible: true, settingFixedValueList: selectedList });
     }
     /** 关闭设置固定值弹框 */
-    closeSettingFixedValueDialog = () => {
+    closeSettingFixedValueDialog = (type = '') => {
+        if (type === 'refresh') {
+            this.handleSearch();
+        }
         this.setState({ settingFixedValueDialogVisible: false });
     }
     /** 查看固定值 */
@@ -653,8 +656,8 @@ class MapTool extends React.Component<IProps, IState> {
                                         // }
                                         // this.handleRangeInfo(item);
                                     }}>
-                                        {canCustomize && <span className='caozuo-text' onClick={this.handleRangeInfo.bind(this, item)}>生成推荐值域</span>}
                                         {item.is_default && item.type !== 'IMAGE' && <span className='caozuo-text' onClick={this.checkFixedValue.bind(this, item)}>查看固定值</span>}
+                                        {canCustomize && <span className='caozuo-text' onClick={this.handleRangeInfo.bind(this, item)}>生成推荐值域</span>}
                                         {!canCustomize && !item.is_default && <span>-</span>}
                                     </div>
                                 </div>;

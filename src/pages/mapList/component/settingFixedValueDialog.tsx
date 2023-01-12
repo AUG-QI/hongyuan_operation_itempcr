@@ -7,7 +7,7 @@ import { isEmpty } from '../../../services/utils';
 
 interface SettingFixedValueDialogProps {
     /** 处理关闭弹框 */
-    closeSettingFixedValueDialog: () => void;
+    closeSettingFixedValueDialog: (type?: string) => void;
     settingFixedValueList: any;
 }
 
@@ -45,7 +45,7 @@ class SettingFixedValueDialog extends React.Component<SettingFixedValueDialogPro
         //  @ts-ignore
         this.setState({ [type]: value });
     }
-    submitData = async (pname: string) => {
+    submitData = async (ayAttributeName: string) => {
         const { settingFixedValueList, closeSettingFixedValueDialog } = this.props;
         const { ayValue, dialogStatusType,  dyValue, ksValue, shipinghaoValue } = this.state;
         if (dialogStatusType === 'setPlatform' && isEmpty(ayValue)) {
@@ -57,10 +57,10 @@ class SettingFixedValueDialog extends React.Component<SettingFixedValueDialogPro
         const aycids = idsList.join(',');
         const data: any = {
             aycids,
-            pname,
+            ayAttributeName,
         };
         if (dialogStatusType === 'setPlatform') {
-            data.vname = ayValue;
+            data.ayCodomainName = ayValue;
         } else {
             const setDownstreamPlatform: any = {};
             if (!isEmpty(ksValue)) {
@@ -72,7 +72,7 @@ class SettingFixedValueDialog extends React.Component<SettingFixedValueDialogPro
             if (!isEmpty(shipinghaoValue)) {
                 setDownstreamPlatform.WXVIDEOSHOP = shipinghaoValue;
             }
-            data.vnames = JSON.stringify(setDownstreamPlatform);
+            data.platformCodomainName = JSON.stringify(setDownstreamPlatform);
         }
         const res = await setPropsDefaultValue(data);
         if (isEmpty(res.success)) {
@@ -83,13 +83,13 @@ class SettingFixedValueDialog extends React.Component<SettingFixedValueDialogPro
         } else {
             message.warning(`操作成功${res.fail.length}笔，操作失败${res.success.length}笔`);
         }
-        closeSettingFixedValueDialog?.();
+        closeSettingFixedValueDialog?.('refresh');
     }
     render () {
         const { closeSettingFixedValueDialog, settingFixedValueList } = this.props;
         const { dialogStatusType, ksValue, dyValue, shipinghaoValue, ayValue } = this.state;
         const ayAttributeName = settingFixedValueList.map((trade: any) => trade.ay_prop_name)[0] || '';
-        return (<Modal title="设置固定值" className='setting-fixedValue-dialog' footer={null} open={true}  onCancel={closeSettingFixedValueDialog.bind(this)} onOk={this.submitData.bind(this, ayAttributeName)}>
+        return (<Modal title="设置固定值" className='setting-fixedValue-dialog' footer={null} open={true}  onCancel={closeSettingFixedValueDialog.bind(this, '')} onOk={this.submitData.bind(this, ayAttributeName)}>
             <div>
                 <span style={{ marginRight: '20px' }}>爱用属性： {ayAttributeName}</span>
                 { dialogStatusType === 'setPlatform' ? <span className='remark'>(若无爱用公共值域，请<span className='setting-text' onClick={this.setDownstreamPlatform.bind(this, 'setDownstreamPlatform')}>设置下游平台固定值</span>)</span> : <span className='setting-text' style={{float: 'right'}} onClick={this.setDownstreamPlatform.bind(this, 'setPlatform')}>返回</span>}
@@ -104,7 +104,7 @@ class SettingFixedValueDialog extends React.Component<SettingFixedValueDialogPro
                     }
                 </div>
                 <div className='setting-footer'>
-                    <Button className='cancel-btn' onClick={closeSettingFixedValueDialog.bind(this)}>取消</Button>
+                    <Button className='cancel-btn' onClick={closeSettingFixedValueDialog.bind(this, '')}>取消</Button>
                     <Button className='footer-btn' type="primary" onClick={this.submitData.bind(this, ayAttributeName)}>确定</Button>
                 </div>
             </div>
