@@ -392,7 +392,9 @@ class MapTool extends React.Component<IProps, IState> {
         });
         const res = await setPropsBindRelation(setPropsData);
         message.warning(`${res.suc_result.length}个类目绑定成功，${res.fail_result.length}个类目绑定失败`);
-        this.setState({ batchBindSearchResult: null, batchBindDialogVisible: false });
+        this.setState({ batchBindSearchResult: null, batchBindDialogVisible: false }, () => {
+            this.handleSearch();
+        });
     }
     /** 处理批量绑定的回调 */
     handleBatchBindDialogCallback = (type: string, value: string = '') => {

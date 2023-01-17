@@ -95,8 +95,8 @@ class CommodityManagement extends React.Component<IProps, IState>  {
         const searchDataJson = sessionStorage.getItem('commoditySearchData');
         if (searchDataJson) {
             const categoryoptions: any = await getCategoryOptions();
-            // const searchData = JSON.parse(searchDataJson);
-            this.setState({  categoryoptions }, () => {
+            const searchData = JSON.parse(searchDataJson);
+            this.setState({ categoryoptions, searchData }, () => {
                 this.handleSearch();
             });
             return;

@@ -92,7 +92,7 @@ class CheckFixedValueDialog extends React.Component<CheckFixedValueDialogProps, 
                         return <div key={item.map_prop_id} className='platform-info'>
                             <div className='platform-label'>
                                 <img  className='platform-img' src={PLATFORM_IMG.shipinhao} alt="" />
-                                <div>快手:</div>
+                                <div>视频号:</div>
                             </div>
                             <div className='platform-item'>
                                 {
